@@ -3,7 +3,7 @@
 
 Group members (3-5) (no Student IDs, only names and github usernames):
 
-1. 
+1. Kaine Makimoto (/KaineJMaki)
 
 2. 
 
