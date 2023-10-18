@@ -7,7 +7,7 @@ Group members (3-5) (no Student IDs, only names and github usernames):
 
 2. Aidan Mason-Mondesire (/aidanMasonmondesire)
 
-3. 
+3. Alonzo Gabriel Manaog (/Gabe-Manaog)
 
 4. 
 
