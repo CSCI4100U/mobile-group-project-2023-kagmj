@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
 
@@ -57,6 +58,22 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     controller: _birthdayController,
                     decoration: InputDecoration(
                       labelText: 'Birthday',
+                      suffixIcon: IconButton(
+                        icon: Icon(Icons.calendar_today),
+                        onPressed: () async {
+                          DateTime? pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime(1990),
+                              lastDate: DateTime.now(),
+                          );
+                          if (pickedDate != null) {
+                            setState(() {
+                              _birthdayController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+                            });
+                          }
+                        },
+                      )
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
