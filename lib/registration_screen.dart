@@ -12,7 +12,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   Future<void> _register(BuildContext context) async {
-    // Ensure that currentState is not null before calling validate
     if (_formKey.currentState?.validate() ?? false) {
       try {
         final SharedPreferences prefs = await SharedPreferences.getInstance();

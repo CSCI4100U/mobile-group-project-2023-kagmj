@@ -21,7 +21,6 @@ class _HomeScreenState extends State<HomeScreen> {
     bool profileSetupComplete = prefs.getBool('profileSetupComplete') ?? false;
     if (!profileSetupComplete) {
       // If the profile setup is not complete, navigate to the ProfileSetupScreen
-      // Assuming you have a named route set up for the ProfileSetupScreen
       Future.delayed(Duration.zero, () {
         Navigator.pushReplacementNamed(context, '/profileSetup');
       });
@@ -31,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _widgetOptions = <Widget>[
-    Text('Home Screen Placeholder'), // This will be your actual Home screen body
+    Text('Home Screen Placeholder'),
     CreateLogScreen(),
     ProfileScreen(),
   ];

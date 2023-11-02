@@ -10,7 +10,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String name = '';
   String birthday = '';
-  // Add any other fields you collect on the ProfileSetupScreen
+  // More customization TBA
 
   @override
   void initState() {
@@ -20,9 +20,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadProfileData() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    // Debug print statements to check the values retrieved from SharedPreferences
-    print("Name from prefs: \${prefs.getString('name')}");
-    print("Birthday from prefs: \${prefs.getString('birthday')}");
     setState(() {
       name = prefs.getString('name') ?? 'N/A';
       birthday = prefs.getString('birthday') ?? 'N/A';
@@ -50,7 +47,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: <Widget>[
             Text('Name: $name'),
             Text('Birthday: $birthday'),
-            // Display other fields here
           ],
         ),
       ),

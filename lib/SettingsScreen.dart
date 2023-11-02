@@ -1,10 +1,7 @@
-
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'login_screen.dart'; // Ensure you have a login_screen.dart file with LoginScreen defined
+import 'login_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
-  // This function will clear user login data and navigate to the LoginScreen
   Future<void> _logout(BuildContext context) async {
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => LoginScreen()),

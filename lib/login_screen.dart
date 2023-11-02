@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'home_screen.dart';
 import 'registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -21,7 +20,6 @@ class _LoginScreenState extends State<LoginScreen> {
       String registeredPassword = prefs.getString('password') ?? '';
 
       if (_emailController.text == registeredEmail && _passwordController.text == registeredPassword) {
-
         // Check if profile setup needs to be completed
         bool profileSetupComplete = prefs.getBool('profileSetupComplete') ?? false;
         if (!profileSetupComplete) {
@@ -133,10 +131,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       child: Text(
                         "Don't have an account? Register here",
-                        style: TextStyle(color: Colors.white), // Replace with any color you prefer
+                        style: TextStyle(color: Colors.white),
                       ),
                       style: TextButton.styleFrom(
-                        primary: Colors.blue, // This will set the splash color (ripple effect color)
+                        primary: Colors.blue,
                       ),
                     ),
                   ],
