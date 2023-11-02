@@ -2,6 +2,8 @@ import 'SettingsScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'edit_profile.dart';
+
 class ProfileScreen extends StatefulWidget {
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -9,8 +11,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String name = '';
-  String birthday = '';
-  // More customization TBA
+  String country = '';
 
   @override
   void initState() {
@@ -22,8 +23,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       name = prefs.getString('name') ?? 'N/A';
-      birthday = prefs.getString('birthday') ?? 'N/A';
-      // Load other fields similarly
+      country = prefs.getString('country') ?? 'N/A';
     });
   }
 
@@ -46,23 +46,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text('Name: $name'),
-            Text('Birthday: $birthday'),
+            Text('Country: $country'),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => EditProfileScreen()),
+                ).then((_) {
+                  // Reload information after updating
+                  _loadProfileData();
+                });
+              },
+              child: Text('Edit Profile'),
+            ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class SettingsScreenPlaceholder extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Settings'),
-      ),
-      body: Center(
-        child: Text('Settings page placeholder'),
       ),
     );
   }

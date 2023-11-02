@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
-import 'ProfileSetupScreen.dart';
+import 'profile_setup.dart';
 
 void main() {
   runApp(MyApp());

@@ -11,14 +11,23 @@ class ProfileSetupScreen extends StatefulWidget {
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
+  final List<String> _countries = ['USA', 'Canada', 'UK'];
+  String? _selectedCountry;
   final TextEditingController _birthdayController = TextEditingController();
+  final List<String> _genders = ['Man', 'Woman', 'Non-binary', 'Prefer not to say'];
+  String? _selectedGender;
+  final TextEditingController _heightController = TextEditingController();
+  final TextEditingController _weightController = TextEditingController();
 
   Future<void> _completeProfileSetup() async {
     if (_formKey.currentState!.validate()) {
-      // Currently using SharedPreferences but will switch to SQLite
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('name', _nameController.text);
+      await prefs.setString('country', _selectedCountry ?? '');
       await prefs.setString('birthday', _birthdayController.text);
+      await prefs.setString('gender', _selectedGender ?? '');
+      await prefs.setString('height', _heightController.text);
+      await prefs.setString('weight', _weightController.text);
       await prefs.setBool('profileSetupComplete', true);
 
       // Navigate to the home screen
@@ -54,6 +63,22 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       return null;
                     },
                   ),
+                  DropdownButtonFormField(
+                    decoration: InputDecoration(labelText: 'Country'),
+                    value: _selectedCountry,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedCountry = newValue;
+                      });
+                    },
+                    items: _countries.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    validator: (value) => value == null ? 'Please select a country' : null,
+                  ),
                   TextFormField(
                     controller: _birthdayController,
                     decoration: InputDecoration(
@@ -78,6 +103,46 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Please enter your birthday';
+                      }
+                      return null;
+                    },
+                  ),
+                  DropdownButtonFormField(
+                    decoration: InputDecoration(labelText: 'Gender'),
+                    value: _selectedGender,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedGender = newValue;
+                      });
+                    },
+                    items: _genders.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    validator: (value) => value == null ? 'Please select your gender' : null,
+                  ),
+                  TextFormField(
+                    controller: _heightController,
+                    decoration: InputDecoration(
+                      labelText: 'Height (cm)',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter your height';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: _weightController,
+                    decoration: InputDecoration(
+                      labelText: 'Weight (kg)',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter your weight';
                       }
                       return null;
                     },
