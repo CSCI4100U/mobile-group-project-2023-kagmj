@@ -1,6 +1,8 @@
+import 'package:final_project/profile.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -19,7 +21,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _heightController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
 
-
   @override
   void initState() {
     super.initState();
@@ -27,27 +28,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   void _loadExistingProfileData() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _nameController.text = prefs.getString('name') ?? '';
-      _selectedCountry = prefs.getString('country') ?? '';
-      _birthdayController.text = prefs.getString('birthday') ?? '';
-      _selectedGender = prefs.getString('gender') ?? '';
-      _heightController.text = prefs.getString('height') ?? '';
-      _weightController.text = prefs.getString('weight') ?? '';
-    });
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot userProfile = await FirebaseFirestore.instance.collection('profiles').doc(user.uid).get();
+      if (userProfile.exists) {
+        Map<String, dynamic>? data = userProfile.data() as Map<String, dynamic>?;
+        setState(() {
+          _nameController.text = data?['name'] ?? '';
+          _selectedCountry = data?['country'] ?? '';
+          _birthdayController.text = data?['birthday'] ?? '';
+          _selectedGender = data?['gender'] ?? '';
+          _heightController.text = data?['height'] ?? '';
+          _weightController.text = data?['weight'] ?? '';
+        });
+      }
+    }
   }
 
   void _saveProfile() async {
     if (_formKey.currentState!.validate()) {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('name', _nameController.text);
-      await prefs.setString('country', _selectedCountry ?? '');
-      await prefs.setString('birthday', _birthdayController.text);
-      await prefs.setString('gender', _selectedGender ?? '');
-      await prefs.setString('height', _heightController.text);
-      await prefs.setString('weight', _weightController.text);
-      Navigator.of(context).pop();
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance.collection('profiles').doc(user.uid).set({
+          'name': _nameController.text,
+          'country': _selectedCountry ?? '',
+          'birthday': _birthdayController.text,
+          'gender': _selectedGender ?? '',
+          'height': _heightController.text,
+          'weight': _weightController.text,
+        }, SetOptions(merge: true));
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => ProfileScreen()));
+      }
     }
   }
 

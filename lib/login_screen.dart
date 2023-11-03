@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'home_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -23,10 +22,26 @@ class _LoginScreenState extends State<LoginScreen> {
           email: _emailController.text,
           password: _passwordController.text,
         );
+        // User sign-in successful, now check if profile setup is complete
+        DocumentSnapshot userProfile = await FirebaseFirestore.instance.collection('profiles').doc(userCredential.user!.uid).get();
 
-        // User sign-in successful
-        // Navigate to the HomeScreen
-        Navigator.pushReplacementNamed(context, '/home');
+        // Check if the userProfile exists and has data
+        if (userProfile.exists && userProfile.data() != null) {
+          // Safely access the data without using the '!' operator
+          Map<String, dynamic> userData = userProfile.data() as Map<String, dynamic>; // Cast the data to the correct type
+          bool profileSetupComplete = userData['profileSetupComplete'] as bool? ?? false; // Cast to bool and provide a default value of false if the field doesn't exist
+
+          // If the 'profileSetupComplete' field is true, navigate to HomeScreen, else to ProfileSetup
+          if (profileSetupComplete) {
+            Navigator.pushReplacementNamed(context, '/home');
+          } else {
+            Navigator.pushReplacementNamed(context, '/profileSetup');
+          }
+        } else {
+          // Handle the case where the userProfile does not exist or has no data
+          Navigator.pushReplacementNamed(context, '/profileSetup');
+        }
+
       } on FirebaseAuthException catch (e) {
         // Handle Firebase sign-in errors
         var errorMessage = 'Failed to sign in. Please try again.';
@@ -36,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
           errorMessage = 'Wrong password provided.';
         } else if (e.code == 'user-disabled') {
           errorMessage = 'User has been disabled.';
-        }
+        };
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),

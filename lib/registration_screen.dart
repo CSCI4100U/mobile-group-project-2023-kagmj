@@ -24,7 +24,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Registration successful!')),
         );
-        Navigator.pushReplacementNamed(context, '/home');
+
+        // Navigate to the profile setup page instead of the home screen
+        Navigator.pushReplacementNamed(context, '/profileSetup');
       } on FirebaseAuthException catch (e) {
         // If there's an error, display a message to the user
         var errorMessage = 'Failed to register. Please try again.';

@@ -1,7 +1,7 @@
-import 'SettingsScreen.dart';
+import 'settings_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'edit_profile.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -12,6 +12,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String name = '';
   String country = '';
+  String avatarUrl = '';
 
   @override
   void initState() {
@@ -20,11 +21,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadProfileData() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      name = prefs.getString('name') ?? 'N/A';
-      country = prefs.getString('country') ?? 'N/A';
-    });
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot userProfile = await FirebaseFirestore.instance
+          .collection('profiles').doc(user.uid).get();
+      if (userProfile.exists) {
+        Map<String, dynamic>? data = userProfile.data() as Map<String,
+            dynamic>?;
+        setState(() {
+          name = data?['name'] ?? '';
+          country = data?['country'] ?? '';
+          avatarUrl = data?['avatarUrl'] ??
+              ''; // Assuming 'avatarUrl' is the field for the avatar image
+        });
+      }
+    }
   }
 
   @override
@@ -36,27 +47,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
           IconButton(
             icon: Icon(Icons.settings),
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingsScreen()));
+              Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => SettingsScreen()));
             },
           ),
         ],
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text('Name: $name'),
-            Text('Country: $country'),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => EditProfileScreen()),
-                ).then((_) {
-                  // Reload information after updating
-                  _loadProfileData();
-                });
-              },
-              child: Text('Edit Profile'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                CircleAvatar(
+                  radius: 40,
+                  backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(
+                      avatarUrl) : null,
+                  child: avatarUrl.isEmpty
+                      ? Icon(Icons.person, size: 40)
+                      : null,
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text(
+                        name,
+                        style: TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        country,
+                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (context) => EditProfileScreen()),
+                    ).then((_) {
+                      _loadProfileData();
+                    });
+                  },
+                  child: Text('Edit Profile'),
+                ),
+              ],
             ),
           ],
         ),
@@ -64,3 +106,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+

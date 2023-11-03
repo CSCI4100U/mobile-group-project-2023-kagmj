@@ -1,6 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'home_screen.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
@@ -19,22 +20,35 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final TextEditingController _heightController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
 
+
   Future<void> _completeProfileSetup() async {
     if (_formKey.currentState!.validate()) {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('name', _nameController.text);
-      await prefs.setString('country', _selectedCountry ?? '');
-      await prefs.setString('birthday', _birthdayController.text);
-      await prefs.setString('gender', _selectedGender ?? '');
-      await prefs.setString('height', _heightController.text);
-      await prefs.setString('weight', _weightController.text);
-      await prefs.setBool('profileSetupComplete', true);
+      // Get the current user
+      User? user = FirebaseAuth.instance.currentUser;
 
-      // Navigate to the home screen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
+      if (user != null) {
+        // Create a document in Firestore
+        await FirebaseFirestore.instance.collection('profiles').doc(user.uid).set({
+          'name': _nameController.text,
+          'country': _selectedCountry ?? '',
+          'birthday': _birthdayController.text,
+          'gender': _selectedGender ?? '',
+          'height': _heightController.text,
+          'weight': _weightController.text,
+          'profileSetupComplete': true,
+        });
+
+        // Navigate to the home screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      } else {
+        // Handle the case where there is no current user logged in
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No user is signed in.')),
+        );
+      }
     }
   }
 
@@ -82,23 +96,23 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   TextFormField(
                     controller: _birthdayController,
                     decoration: InputDecoration(
-                      labelText: 'Birthday',
-                      suffixIcon: IconButton(
-                        icon: Icon(Icons.calendar_today),
-                        onPressed: () async {
-                          DateTime? pickedDate = await showDatePicker(
+                        labelText: 'Birthday',
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.calendar_today),
+                          onPressed: () async {
+                            DateTime? pickedDate = await showDatePicker(
                               context: context,
                               initialDate: DateTime.now(),
                               firstDate: DateTime(1990),
                               lastDate: DateTime.now(),
-                          );
-                          if (pickedDate != null) {
-                            setState(() {
-                              _birthdayController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
-                            });
-                          }
-                        },
-                      )
+                            );
+                            if (pickedDate != null) {
+                              setState(() {
+                                _birthdayController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+                              });
+                            }
+                          },
+                        )
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -161,3 +175,5 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     );
   }
 }
+
+
