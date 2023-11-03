@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class RegistrationScreen extends StatefulWidget {
   @override
@@ -14,18 +15,31 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Future<void> _register(BuildContext context) async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
-        final SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('email', _emailController.text);
-        await prefs.setString('password', _passwordController.text);
-        await prefs.setBool('profileSetupComplete', false);
+        // Use Firebase Authentication to create a new user
+        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Registration successful!')),
         );
-        await Future.delayed(Duration(seconds: 2));
-        Navigator.pop(context);
+        Navigator.pushReplacementNamed(context, '/home');
+      } on FirebaseAuthException catch (e) {
+        // If there's an error, display a message to the user
+        var errorMessage = 'Failed to register. Please try again.';
+        if (e.code == 'weak-password') {
+          errorMessage = 'The password provided is too weak.';
+        } else if (e.code == 'email-already-in-use') {
+          errorMessage = 'The account already exists for that email.';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to register. Please try again.')),
+          SnackBar(content: Text('An error occurred. Please try again later.')),
         );
       }
     } else {

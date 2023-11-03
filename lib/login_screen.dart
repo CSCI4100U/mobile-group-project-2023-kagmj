@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'home_screen.dart';
 import 'registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,24 +17,34 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      String registeredEmail = prefs.getString('email') ?? '';
-      String registeredPassword = prefs.getString('password') ?? '';
+      try {
+        // Use Firebase Authentication to sign in
+        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
 
-      if (_emailController.text == registeredEmail && _passwordController.text == registeredPassword) {
-        // Check if profile setup needs to be completed
-        bool profileSetupComplete = prefs.getBool('profileSetupComplete') ?? false;
-        if (!profileSetupComplete) {
-          // Navigate to the ProfileSetupScreen if the profile is not set up
-          Navigator.pushReplacementNamed(context, '/profileSetup');
-        } else {
-          // Navigate to the HomeScreen if the profile is already set up
-          Navigator.pushReplacementNamed(context, '/home');
+        // User sign-in successful
+        // Navigate to the HomeScreen
+        Navigator.pushReplacementNamed(context, '/home');
+      } on FirebaseAuthException catch (e) {
+        // Handle Firebase sign-in errors
+        var errorMessage = 'Failed to sign in. Please try again.';
+        if (e.code == 'user-not-found') {
+          errorMessage = 'No user found for that email.';
+        } else if (e.code == 'wrong-password') {
+          errorMessage = 'Wrong password provided.';
+        } else if (e.code == 'user-disabled') {
+          errorMessage = 'User has been disabled.';
         }
 
-      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Incorrect email or password')),
+          SnackBar(content: Text(errorMessage)),
+        );
+      } catch (e) {
+        // Handle other errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('An error occurred. Please try again later.')),
         );
       }
     }
