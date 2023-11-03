@@ -3,14 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'home_screen.dart';
 
+// EditProfileScreen Class
+// Creates the screen state for reuse
 class EditProfileScreen extends StatefulWidget {
+  const EditProfileScreen({super.key});
   @override
   _EditProfileScreenState createState() => _EditProfileScreenState();
 }
 
+// _EditProfileScreenState Class
+// Creates the EditProfile Screen
 class _EditProfileScreenState extends State<EditProfileScreen> {
+  // Initialize profile options
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final List<String> _countries = ['USA', 'Canada', 'UK'];
@@ -22,11 +27,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _weightController = TextEditingController();
 
   @override
+  // Load in any existing profile information
   void initState() {
     super.initState();
     _loadExistingProfileData();
   }
 
+  // _loadExistingProfileData Method
+  // Loads in current user's data from Firestore database
   void _loadExistingProfileData() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -34,6 +42,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (userProfile.exists) {
         Map<String, dynamic>? data = userProfile.data() as Map<String, dynamic>?;
         setState(() {
+          // Populates controllers with user data
           _nameController.text = data?['name'] ?? '';
           _selectedCountry = data?['country'] ?? '';
           _birthdayController.text = data?['birthday'] ?? '';
@@ -45,6 +54,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  // _saveProfile Method
+  // Saves updated information to the Firestore database
   void _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       User? user = FirebaseAuth.instance.currentUser;

@@ -3,36 +3,24 @@ import 'package:flutter/material.dart';
 import 'create_log.dart';
 import 'profile.dart';
 
+// HomeScreen Class
+// Creates the screen state for reuse
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
-  @override
-  void initState() {
-    super.initState();
-    _checkProfileSetup();
-  }
-
-  Future<void> _checkProfileSetup() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool profileSetupComplete = prefs.getBool('profileSetupComplete') ?? false;
-    if (!profileSetupComplete) {
-      // If the profile setup is not complete, navigate to the ProfileSetupScreen
-      Future.delayed(Duration.zero, () {
-        Navigator.pushReplacementNamed(context, '/profileSetup');
-      });
-    }
-  }
-
   int _selectedIndex = 0;
 
   final List<Widget> _widgetOptions = <Widget>[
     Text('Home Screen Placeholder'),
-    CreateLogScreen(),
-    ProfileScreen(),
+    Scaffold(
+      body: CreateLogScreen(),
+    ),
+    Scaffold(
+      body: ProfileScreen(),
+    ),
   ];
 
   void _onItemTapped(int index) {
@@ -44,9 +32,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Fitness Social Media Platform'),
-      ),
+      appBar: _selectedIndex == 0 ? AppBar(
+        title: Text("Home"),
+      ) : null,
       body: Center(
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
@@ -66,9 +54,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue,
+        selectedItemColor: Colors.amber[800],
         onTap: _onItemTapped,
       ),
     );
   }
 }
+
