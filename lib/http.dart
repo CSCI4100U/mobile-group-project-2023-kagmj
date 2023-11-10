@@ -35,4 +35,25 @@ class _exerciseListState extends State<exerciseList> {
   Widget build(BuildContext context) {
     return const Placeholder();
   }
+
+
+  //example one in lecture fit to use our exercises class
+  // use this in the added exercises section
+  // still needs to be edited
+  //TODO
+  Widget _createExercises(){
+    if(_exercises.isEmpty){
+      return CircularProgressIndicator();
+    }else{
+      return ListView.builder(
+          itemCount: _exercises.length,
+          itemBuilder: (BuildContext context, int index){
+            return ListTile(
+              title: Text(_exercises[index].title!),
+            );
+          }
+      );
+    }
+  }
+
 }
