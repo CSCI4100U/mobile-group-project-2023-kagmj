@@ -245,6 +245,23 @@ class Exercise {
     required this.reps,
     required this.weight,
   });
+
+  factory Exercise.fromMap(Map map){
+    return Exercise(
+      title: map['title'],
+      type: map['type'],
+      gear: map['gear'],
+      schedule: map['schedule'],
+      sets: map['sets'],
+      reps: map['reps'],
+      weight: map['weight'],
+    );
+  }
+
+  String toString(){
+    return 'Exercise($title,$type,$gear,$schedule,$sets,$reps,$weight)';
+  }
+
 }
 class CreateExerciseScreen extends StatefulWidget {
   final Function(Exercise) addExercise;
@@ -346,7 +363,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Added Exercises',
+                  Text('Added Exercises', //TODO: ADD POST functionality to this instead of just pulling from item
                       style:
                       TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   ListView.builder(
