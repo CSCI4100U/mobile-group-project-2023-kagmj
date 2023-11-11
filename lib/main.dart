@@ -4,6 +4,7 @@ import 'firebase_options.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
 import 'profile_setup.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Main Method
 // Stars the application
@@ -20,13 +21,17 @@ Future<void> main() async {
     print('Error initializing Firebase: $e');
   }
   // Run App
-  runApp(const MyApp());
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
+  runApp(MyApp(isLoggedIn: isLoggedIn));
 }
 
 // MyApp Method
 // Sets up the user interface
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isLoggedIn;
+  const MyApp({Key? key, required this.isLoggedIn}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +46,7 @@ class MyApp extends StatelessWidget {
         '/profileSetup': (context) => ProfileSetupScreen(),
       },
       // Set the initial route
-      initialRoute: '/',
+      initialRoute: isLoggedIn ? '/home' : '/',
     );
   }
 }
