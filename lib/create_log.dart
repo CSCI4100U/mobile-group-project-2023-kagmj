@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:final_project/log_database.dart'; // Import your DatabaseHelper class
+import 'package:final_project/food_list.dart';
 
 class CreateLogScreen extends StatefulWidget {
   @override
@@ -206,6 +207,14 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
                 controller: _logFoodItemsController,
                 decoration: InputDecoration(labelText: 'Food Items'),
               ),
+            if(_logType == "Meal")
+              ElevatedButton(onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => foodList(),
+                  ),
+                );
+              }, child: Text('Food List')),
             if (_logType == "Meal")
               ElevatedButton(
                 onPressed: () {

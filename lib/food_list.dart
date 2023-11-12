@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:final_project/create_log.dart';
 
 class Food { //TODO swap this stuff to Food descriptors when finding a suitable JSON for now remains example from lectures
   int? id; //unique identifier for the object
