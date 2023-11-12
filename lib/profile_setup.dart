@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'home_screen.dart';
+import 'push_notification.dart';
+
+PushNotificationService _notificationService = PushNotificationService();
 
 class ProfileSetupScreen extends StatefulWidget {
   @override
@@ -37,6 +40,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           'weight': _weightController.text,
           'profileSetupComplete': true,
         });
+
+        // Send notification upon profile creation
+        await _notificationService.sendNotification('Profile Setup Complete', 'Your profile setup is complete!');
 
         // Navigate to the home screen
         Navigator.pushReplacement(

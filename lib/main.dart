@@ -4,6 +4,7 @@ import 'firebase_options.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
 import 'profile_setup.dart';
+import 'push_notification.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Main Method
@@ -17,6 +18,10 @@ Future<void> main() async {
     );
     // Error Logging
     print('Firebase initialized successfully');
+
+    // Initialize push notifications
+    PushNotificationService().initialize();
+
   } catch (e) {
     print('Error initializing Firebase: $e');
   }
