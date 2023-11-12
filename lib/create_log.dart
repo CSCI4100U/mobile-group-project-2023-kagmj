@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:final_project/log_database.dart'; // Import your DatabaseHelper class
 import 'package:final_project/food_list.dart';
+import 'package:notifications/notifications.dart';
 
 class CreateLogScreen extends StatefulWidget {
   @override
@@ -20,6 +21,7 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
   final TextEditingController _workoutTypeController = TextEditingController(text: "Chest"); // Set the initial value to "Chest"
   String _logType = "Workout";
   List<Exercise> exercises = [];
+  final _notifications = Notifications();
 
   void _submitLog() async {
     final logTitle = _logTitleController.text;
@@ -364,6 +366,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
                   ),
                   ElevatedButton(
                     onPressed: () {
+                      showSnackbar(context, "Exercise Added");
                       if (_formKey.currentState!.validate()) {
                         _formKey.currentState!.save();
                         final newExercise = Exercise(
@@ -414,5 +417,15 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
       ),
     );
   }
+
+  void showSnackbar(BuildContext context, String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      duration: Duration(seconds: 3), // Adjust the duration as needed
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
 }
 
