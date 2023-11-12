@@ -363,7 +363,7 @@ class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Added Exercises', //TODO: ADD POST functionality to this instead of just pulling from item
+                  Text('Added Exercises',
                       style:
                       TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   ListView.builder(
