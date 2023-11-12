@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:final_project/log_database.dart'; // Import your DatabaseHelper class
 
 class CreateLogScreen extends StatefulWidget {
   @override
@@ -19,7 +20,7 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
   String _logType = "Workout";
   List<Exercise> exercises = [];
 
-  void _submitLog() {
+  void _submitLog() async {
     final logTitle = _logTitleController.text;
     final logRoutine = _logRoutineController.text;
     final logDate = _logDateController.text;
@@ -30,9 +31,27 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
     final logRecipes = _logRecipesController.text;
     final logFoodItems = _logFoodItemsController.text;
 
-    final workoutType = _workoutTypeController.text; // Get the workout type
+    final workoutType = _workoutTypeController.text;
 
-    // Handle the submission of the exercise log data
+    // Prepare the log data as a map
+    final logData = {
+      'logTitle': logTitle,
+      'logRoutine': logRoutine,
+      'logDate': logDate,
+      'logTime': logTime,
+      'logDescription': logDescription,
+      'logGear': logGear,
+      'logMealName': logMealName,
+      'logRecipes': logRecipes,
+      'logFoodItems': logFoodItems,
+      'workoutType': workoutType,
+    };
+
+    // Insert the log data into the database
+    final dbHelper = DatabaseHelper();
+    final logId = await dbHelper.insertLog(logData);
+
+    // Now you can handle the submission of the exercise log data if needed
     // ...
 
     // Clear the text fields after submission

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'registration_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -24,6 +25,11 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         // User sign-in successful, now check if profile setup is complete
         DocumentSnapshot userProfile = await FirebaseFirestore.instance.collection('profiles').doc(userCredential.user!.uid).get();
+
+        // Save login state locally
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('userId', userCredential.user!.uid);
 
         // Check if the userProfile exists and has data
         if (userProfile.exists && userProfile.data() != null) {

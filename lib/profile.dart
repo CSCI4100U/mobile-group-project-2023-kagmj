@@ -62,11 +62,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 CircleAvatar(
-                  radius: 40,
+                  radius: 30,
                   backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(
                       avatarUrl) : null,
                   child: avatarUrl.isEmpty
-                      ? Icon(Icons.person, size: 40)
+                      ? Icon(Icons.person, size: 30)
                       : null,
                 ),
                 SizedBox(width: 10),
