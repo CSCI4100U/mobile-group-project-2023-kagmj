@@ -211,7 +211,7 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
               ElevatedButton(onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => foodList(),
+                    builder: (context) => foodList(title: 'HTTP Home Page'), //throwing "Null check operator used on a null value"
                   ),
                 );
               }, child: Text('Food List')),
