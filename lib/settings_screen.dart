@@ -12,6 +12,9 @@ class SettingsScreen extends StatelessWidget {
       MaterialPageRoute(builder: (context) => LoginScreen()),
       ModalRoute.withName('/'),
     );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('You\'ve Been Logged Out')),
+    );
   }
 
   @override
@@ -28,4 +31,6 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
+
+
 }

@@ -40,6 +40,9 @@ class _LoginScreenState extends State<LoginScreen> {
           // If the 'profileSetupComplete' field is true, navigate to HomeScreen, else to ProfileSetup
           if (profileSetupComplete) {
             Navigator.pushReplacementNamed(context, '/home');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Welcome Back!')),
+            );
           } else {
             Navigator.pushReplacementNamed(context, '/profileSetup');
           }
