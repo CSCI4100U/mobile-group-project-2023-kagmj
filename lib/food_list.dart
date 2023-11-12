@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+//below might not be necessary
 class Food { //TODO swap this stuff to Food descriptors when finding a suitable JSON for now remains example from lectures
   int? id; //unique identifier for the object
   int? userId; //person who owns this object
@@ -42,91 +43,40 @@ class _foodListState extends State<foodList> {
     loadFoods();
   }
 
-  List<Food> _foods = [];
+  List<dynamic> _foods = [];
 
-  Future loadFoods() async{
-    var response = await http.get(Uri.parse('https://jsonplaceholder.typicode.com/todos'));
+  Future<void> loadFoods() async {
+    var url = 'https://raw.githubusercontent.com/techjollof/USDA-Food-Database-Analyzing-Nutrient-Information/master/smallerDataSet.json';
+
+    var response = await http.get(Uri.parse(url));
+
     if (response.statusCode == 200) {
-      _foods = [];
-      List food_items = jsonDecode(response.body);
-      for(var item in food_items){
-        _foods.add(Food.fromMap(item));
-      }
+      setState(() {
+        _foods = json.decode(response.body);
+      });
+    } else {
+      print('Failed to fetch data: ${response.statusCode}');
     }
-  }
-
-  Widget _createFoodList(){
-    if (_foods.length == 0){
-      return CircularProgressIndicator();
-    }
-    return ListView.builder(
-        itemCount: _foods.length,
-        itemBuilder: (BuildContext context, int index){
-          return ListTile(
-            title: Text(_foods[index].title!),
-              subtitle: Text(_foods[index].userId.toString()),
-            leading: Checkbox(
-              value: _foods[index].completed,
-              onChanged: (value){
-                setState(() {
-                  _foods[index].completed = value;
-                });
-              },
-            ),
-          );
-      }
-    );
-  }
-
-  Future httppush() async{ //dont know if we'll need this in the future when changed to foods
-    var response = await http.post(
-      Uri.parse('https://jsonplaceholder.typicode.com/todos'),
-      headers: <String,String> {
-        'Content-Type': 'application/json; charset=UTF-8'
-      },
-      body: jsonEncode(<String,dynamic> {
-        'title': 'sample text',
-        'userId': 420,
-        'completed': true
-      }),
-    );
-    setState(() {
-      _foods.add(Food.fromMap(jsonDecode(response.body)));
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title!),
-        actions: [
-          IconButton(
-              onPressed: (){
-                List<Food> newFood = [];
-                for (var food in _foods){
-                  if (!food.completed!){
-                    newFood.add(food);
-                  } else{
-                    http.delete(
-                        Uri.parse(
-                            'https://jsonplaceholder.typicode.com/todos/${food.id}'
-                        )
-                    );
-                  }
-                  setState(() {
-                    _foods = newFood;
-                  });
-                }
-              },
-              icon: Icon(Icons.delete)
-          ),
-        ],
+        title: Text('Food List'),
       ),
-      body: _createFoodList(),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: httppush,
+      body: ListView.builder(
+        itemCount: _foods.length,
+        itemBuilder: (context, index) {
+          var food = _foods[index];
+          return ListTile(
+            title: Text(food['description']),
+            subtitle: Text("ID: ${food['id']}"),
+            onTap: () {
+              print(food['nutrients']);
+            },
+          );
+        },
       ),
     );
   }
