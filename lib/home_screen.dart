@@ -16,7 +16,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String userName = '';
   String avatarUrl = '';
 
-
   @override
   void initState() {
     super.initState();
@@ -26,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchLogs() async {
     _logs = await DatabaseHelper().getLogs(); // Fetch logs from the database
-    setState(() {}); // Update the UI with the fetched logs
+    setState(() {});
   }
 
   void _deleteLog(int id) async {
@@ -88,8 +87,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Log title, date, and description
                       Text(log['logTitle'] ?? 'Untitled Log', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       SizedBox(height: 4),
-                      Text('Date: ${log['dateField'] ?? 'No Date'}', style: TextStyle(fontSize: 14, color: Colors.grey)), // Replace 'dateField'
-                      Text('Time: ${log['timeField'] ?? 'No Time'}', style: TextStyle(fontSize: 14, color: Colors.grey)), // Replace 'timeField'
+                      Text(
+                          '${log['logDate'] ?? 'No Date'} at ${log['logTime'] ?? 'No Time'}',
+                          style: TextStyle(fontSize: 14, color: Colors.grey)
+                      ),
                       SizedBox(height: 8),
                       Text(log['logDescription'] ?? 'No Description', style: TextStyle(fontSize: 16)),
                     ],
@@ -122,9 +123,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Widget> _buildWidgetOptions() {
     return <Widget>[
-      _buildHomeScreen(), // Updated to display logs
-      Scaffold(body: CreateLogScreen()), // assuming you have a CreateLogScreen
-      Scaffold(body: ProfileScreen()), // assuming you have a ProfileScreen
+      _buildHomeScreen(),
+      Scaffold(body: CreateLogScreen()),
+      Scaffold(body: ProfileScreen()),
     ];
   }
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:final_project/log_database.dart';
 import 'package:final_project/food_list.dart';
 import 'package:intl/intl.dart';
+import 'create_exercise.dart';
+import 'exercise.dart';
 import 'home_screen.dart';
 
 class CreateLogScreen extends StatefulWidget {
@@ -24,8 +26,19 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
   List<Exercise> exercises = [];
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
-  final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
-  final DateFormat _timeFormat = DateFormat('HH:mm');
+  final DateFormat _dateFormat = DateFormat('MMMM dd, yyyy');
+  final DateFormat _timeFormat = DateFormat('h:mm a');
+  String? _selectedGear;
+  List<String> _gearItems = ['Dumbbells', 'Barbell', 'Add New Gear'];
+
+  @override
+  void initState() {
+    super.initState();
+    DateTime now = DateTime.now();
+    _logTitleController.text= "Workout";
+    _logDateController.text = DateFormat('MMMM dd, yyyy').format(now);
+    _logTimeController.text = DateFormat('h:mm a').format(now);
+  }
 
   void _submitLog() async {
     final log = {
@@ -57,6 +70,7 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
+        _logDateController.text = DateFormat('MMMM dd, yyyy').format(picked); // Format: November 23, 2023
       });
     }
   }
@@ -69,6 +83,9 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
     if (picked != null && picked != _selectedTime) {
       setState(() {
         _selectedTime = picked;
+        String formattedTime = DateFormat('h:mm a') // Format: 11:30 PM
+            .format(DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, picked.hour, picked.minute));
+        _logTimeController.text = formattedTime;
       });
     }
   }
@@ -77,6 +94,43 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
     setState(() {
       exercises.add(exercise);
     });
+  }
+
+  void _addNewGear() async {
+    String? newGearName = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        TextEditingController _newGearController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Add New Gear'),
+          content: TextField(
+            controller: _newGearController,
+            decoration: const InputDecoration(hintText: "Enter gear name"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog without saving
+              },
+            ),
+            TextButton(
+              child: const Text('Save'),
+              onPressed: () {
+                Navigator.of(context).pop(_newGearController.text); // Return the new gear name
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (newGearName != null && newGearName.isNotEmpty) {
+      setState(() {
+        _gearItems.insert(_gearItems.length - 1, newGearName); // Add new gear before 'Add New Gear...'
+        _selectedGear = newGearName; // Update the selected gear to the new gear
+      });
+    }
   }
 
   @override
@@ -185,9 +239,24 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
               decoration: InputDecoration(labelText: 'Description'),
             ),
             if (_logType == "Workout")
-              TextField(
-                controller: _logGearController,
-                decoration: InputDecoration(labelText: 'Gear Used'),
+              DropdownButtonFormField<String>(
+                value: _selectedGear,
+                hint: Text('Select Gear'),
+                onChanged: (String? newValue) {
+                  if (newValue == 'Add New Gear...') {
+                    _addNewGear();
+                  } else {
+                    setState(() {
+                      _selectedGear = newValue;
+                    });
+                  }
+                },
+                items: _gearItems.map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
               ),
             if (_logType == "Workout")
               ElevatedButton(
@@ -257,170 +326,5 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
       ),
     );
   }
-}
-
-class Exercise {
-  String title;
-  String type;
-  String gear;
-  String schedule;
-  String sets;
-  String reps;
-  String weight;
-
-  Exercise({
-    required this.title,
-    required this.type,
-    required this.gear,
-    required this.schedule,
-    required this.sets,
-    required this.reps,
-    required this.weight,
-  });
-
-  factory Exercise.fromMap(Map map){
-    return Exercise(
-      title: map['title'],
-      type: map['type'],
-      gear: map['gear'],
-      schedule: map['schedule'],
-      sets: map['sets'],
-      reps: map['reps'],
-      weight: map['weight'],
-    );
-  }
-
-  String toString(){
-    return 'Exercise($title,$type,$gear,$schedule,$sets,$reps,$weight)';
-  }
-
-}
-class CreateExerciseScreen extends StatefulWidget {
-  final Function(Exercise) addExercise;
-
-  CreateExerciseScreen({required this.addExercise});
-
-  @override
-  _CreateExerciseScreenState createState() => _CreateExerciseScreenState();
-}
-
-class _CreateExerciseScreenState extends State<CreateExerciseScreen> {
-  final _formKey = GlobalKey<FormState>();
-  String title = '';
-  String type = '';
-  String gear = '';
-  String schedule = '';
-  String sets = '';
-  String reps = '';
-  String weight = '';
-  List<Exercise> addedExercises = [];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Create Exercise Routine'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: <Widget>[
-            Form(
-              key: _formKey,
-              child: Column(
-                children: <Widget>[
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Exercise Title'),
-                    onSaved: (value) => title = value!,
-                  ),
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Exercise Type'),
-                    onSaved: (value) => type = value!,
-                  ),
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Gear Used'),
-                    onSaved: (value) => gear = value!,
-                  ),
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Schedule'),
-                    onSaved: (value) => schedule = value!,
-                  ),
-                  Row(
-                    children: <Widget>[
-                      Text(
-                        'Exercise:',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.left,
-                      ),
-                    ],
-                  ),
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Sets'),
-                    onSaved: (value) => sets = value!,
-                  ),
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Reps'),
-                    onSaved: (value) => reps = value!,
-                  ),
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Weight'),
-                    onSaved: (value) => weight = value!,
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Exercise Added.')),
-                      );
-                      if (_formKey.currentState!.validate()) {
-                        _formKey.currentState!.save();
-                        final newExercise = Exercise(
-                          title: title,
-                          type: type,
-                          gear: gear,
-                          schedule: schedule,
-                          sets: sets,
-                          reps: reps,
-                          weight: weight,
-                        );
-                        setState(() {
-                          addedExercises.add(newExercise);
-                        });
-                      }
-                    },
-                    child: Text('Add Exercise'),
-                  ),
-                ],
-              ),
-            ),
-
-            // Display the added exercises below the form
-            if (addedExercises.isNotEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Added Exercises',
-                      style:
-                      TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: addedExercises.length,
-                    itemBuilder: (context, index) {
-                      final exercise = addedExercises[index];
-                      return ListTile(
-                        title: Text(exercise.title),
-                        subtitle: Text(
-                            'Type: ${exercise.type}, Gear: ${exercise.gear}, Schedule: ${exercise.schedule}\nSets: ${exercise.sets}, Reps: ${exercise.reps}, Weight: ${exercise.weight}'),
-                      );
-                    },
-                  ),
-                ],
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
 }
 
