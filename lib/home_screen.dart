@@ -62,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: _logs.length,
         itemBuilder: (BuildContext context, int index) {
           var log = _logs[index];
+          String displayTitle = "${log['logTitle'] ?? 'No Title'} - ${log['workoutType'] ?? 'No Workout Type'}";
           return Card(
             margin: const EdgeInsets.all(8.0),
             child: Stack(
@@ -88,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 8),
                       // Log title, date, and description
-                      Text(log['logTitle'] ?? 'Untitled Log', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text(displayTitle, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 4),
                       Text(
                           '${log['logDate'] ?? 'No Date'} at ${log['logTime'] ?? 'No Time'}',
