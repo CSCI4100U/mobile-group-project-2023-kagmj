@@ -1,18 +1,21 @@
+// ignore_for_file: library_private_types_in_public_api
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:final_project/log_database.dart'; // Import your DatabaseHelper class
+import 'package:final_project/log_database.dart';
 import 'create_log.dart';
 import 'profile.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  List<Map<String, dynamic>> _logs = []; // List to hold logs
+  List<Map<String, dynamic>> _logs = [];
   String userName = '';
   String avatarUrl = '';
 
@@ -60,11 +63,11 @@ class _HomeScreenState extends State<HomeScreen> {
         itemBuilder: (BuildContext context, int index) {
           var log = _logs[index];
           return Card(
-            margin: EdgeInsets.all(8.0),
+            margin: const EdgeInsets.all(8.0),
             child: Stack(
               children: [
                 Padding(
-                  padding: EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(8.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -74,25 +77,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           CircleAvatar(
                             backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(
                                 avatarUrl) : null,
-                            child: avatarUrl.isEmpty
-                                ? Icon(Icons.person, size: 30)
-                                : null,
                             radius: 20,
+                            child: avatarUrl.isEmpty
+                                ? const Icon(Icons.person, size: 30)
+                                : null,
                           ),
-                          SizedBox(width: 8),
-                          Text(userName, style: TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(width: 8),
+                          Text(userName, style: const TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       // Log title, date, and description
-                      Text(log['logTitle'] ?? 'Untitled Log', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 4),
+                      Text(log['logTitle'] ?? 'Untitled Log', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
                       Text(
                           '${log['logDate'] ?? 'No Date'} at ${log['logTime'] ?? 'No Time'}',
-                          style: TextStyle(fontSize: 14, color: Colors.grey)
+                          style: const TextStyle(fontSize: 14, color: Colors.grey)
                       ),
-                      SizedBox(height: 8),
-                      Text(log['logDescription'] ?? 'No Description', style: TextStyle(fontSize: 16)),
+                      const SizedBox(height: 8),
+                      Text(log['logDescription'] ?? 'No Description', style: const TextStyle(fontSize: 16)),
                     ],
                   ),
                 ),
@@ -124,19 +127,18 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Widget> _buildWidgetOptions() {
     return <Widget>[
       _buildHomeScreen(),
-      Scaffold(body: CreateLogScreen()),
+      const Scaffold(body: CreateLogScreen()),
       Scaffold(body: ProfileScreen()),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
-    final _widgetOptions = _buildWidgetOptions();
-
+    final widgetOptions = _buildWidgetOptions();
     return Scaffold(
-      appBar: _selectedIndex == 0 ? AppBar(title: Text("Home")) : null,
+      appBar: _selectedIndex == 0 ? AppBar(title: const Text("Home"), automaticallyImplyLeading: false,) : null,
       body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
+        child: widgetOptions.elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[

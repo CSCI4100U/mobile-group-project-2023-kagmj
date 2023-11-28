@@ -66,8 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
           errorMessage = 'Wrong password provided.';
         } else if (e.code == 'user-disabled') {
           errorMessage = 'User has been disabled.';
-        }
-        ;
+        };
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -17,13 +18,17 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     // Error Logging
-    print('Firebase initialized successfully');
+    if (kDebugMode) {
+      print('Firebase initialized successfully');
+    }
 
     // Initialize push notifications
     PushNotificationService().initialize();
 
   } catch (e) {
-    print('Error initializing Firebase: $e');
+    if (kDebugMode) {
+      print('Error initializing Firebase: $e');
+    }
   }
   // Run App
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -36,7 +41,7 @@ Future<void> main() async {
 // Sets up the user interface
 class MyApp extends StatelessWidget {
   final bool isLoggedIn;
-  const MyApp({Key? key, required this.isLoggedIn}) : super(key: key);
+  const MyApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
