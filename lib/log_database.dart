@@ -12,6 +12,12 @@ class DatabaseHelper {
     return _database!;
   }
 
+  Future<List<Map<String, dynamic>>> getLogs() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('logs', orderBy: 'id DESC');
+    return maps;
+  }
+
   Future<Database> initDatabase() async {
     String path = join(await getDatabasesPath(), 'your_database.db');
     return await openDatabase(
@@ -43,5 +49,12 @@ class DatabaseHelper {
     return await db.insert(tableName, log);
   }
 
-// Add other CRUD operations as needed
+  Future<void> deleteLog(int id) async {
+    final db = await database;
+    await db.delete(
+      tableName,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 }

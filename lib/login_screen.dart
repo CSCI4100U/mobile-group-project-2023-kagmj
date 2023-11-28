@@ -19,12 +19,16 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       try {
         // Use Firebase Authentication to sign in
-        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text,
           password: _passwordController.text,
         );
         // User sign-in successful, now check if profile setup is complete
-        DocumentSnapshot userProfile = await FirebaseFirestore.instance.collection('profiles').doc(userCredential.user!.uid).get();
+        DocumentSnapshot userProfile = await FirebaseFirestore.instance
+            .collection('profiles')
+            .doc(userCredential.user!.uid)
+            .get();
 
         // Save login state locally
         SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -34,8 +38,11 @@ class _LoginScreenState extends State<LoginScreen> {
         // Check if the userProfile exists and has data
         if (userProfile.exists && userProfile.data() != null) {
           // Safely access the data without using the '!' operator
-          Map<String, dynamic> userData = userProfile.data() as Map<String, dynamic>; // Cast the data to the correct type
-          bool profileSetupComplete = userData['profileSetupComplete'] as bool? ?? false; // Cast to bool and provide a default value of false if the field doesn't exist
+          Map<String, dynamic> userData = userProfile.data()
+              as Map<String, dynamic>; // Cast the data to the correct type
+          bool profileSetupComplete = userData['profileSetupComplete']
+                  as bool? ??
+              false; // Cast to bool and provide a default value of false if the field doesn't exist
 
           // If the 'profileSetupComplete' field is true, navigate to HomeScreen, else to ProfileSetup
           if (profileSetupComplete) {
@@ -50,7 +57,6 @@ class _LoginScreenState extends State<LoginScreen> {
           // Handle the case where the userProfile does not exist or has no data
           Navigator.pushReplacementNamed(context, '/profileSetup');
         }
-
       } on FirebaseAuthException catch (e) {
         // Handle Firebase sign-in errors
         var errorMessage = 'Failed to sign in. Please try again.';
@@ -60,7 +66,8 @@ class _LoginScreenState extends State<LoginScreen> {
           errorMessage = 'Wrong password provided.';
         } else if (e.code == 'user-disabled') {
           errorMessage = 'User has been disabled.';
-        };
+        }
+        ;
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
@@ -80,7 +87,8 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Color(0xFF0FA7E0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Center( // Centering the content
+        child: Center(
+          // Centering the content
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
@@ -132,7 +140,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
                           onPressed: () {
                             setState(() {
@@ -154,15 +164,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () => _login(context),
                       child: Text('Login'),
                       style: ElevatedButton.styleFrom(
-                        primary: Color(0xFFFFA726), // Background color
-                        onPrimary: Colors.white, // Text color
+                        foregroundColor: Colors.white,
+                        backgroundColor: Color(0xFFFFA726), // Text color
                       ),
                     ),
-
                     TextButton(
                       onPressed: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => RegistrationScreen()),
+                          MaterialPageRoute(
+                              builder: (context) => RegistrationScreen()),
                         );
                       },
                       child: Text(
@@ -170,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(color: Colors.white),
                       ),
                       style: TextButton.styleFrom(
-                        primary: Colors.blue,
+                        foregroundColor: Colors.blue,
                       ),
                     ),
                   ],

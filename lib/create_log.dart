@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:final_project/log_database.dart'; // Import your DatabaseHelper class
+import 'package:final_project/log_database.dart';
 import 'package:final_project/food_list.dart';
+import 'package:intl/intl.dart';
+import 'home_screen.dart';
 
 class CreateLogScreen extends StatefulWidget {
   @override
@@ -20,55 +22,55 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
   final TextEditingController _workoutTypeController = TextEditingController(text: "Chest"); // Set the initial value to "Chest"
   String _logType = "Workout";
   List<Exercise> exercises = [];
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
+  final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
+  final DateFormat _timeFormat = DateFormat('HH:mm');
 
   void _submitLog() async {
-    final logTitle = _logTitleController.text;
-    final logRoutine = _logRoutineController.text;
-    final logDate = _logDateController.text;
-    final logTime = _logTimeController.text;
-    final logDescription = _logDescriptionController.text;
-    final logGear = _logGearController.text;
-    final logMealName = _logMealNameController.text;
-    final logRecipes = _logRecipesController.text;
-    final logFoodItems = _logFoodItemsController.text;
-
-    final workoutType = _workoutTypeController.text;
-
-    // Prepare the log data as a map
-    final logData = {
-      'logTitle': logTitle,
-      'logRoutine': logRoutine,
-      'logDate': logDate,
-      'logTime': logTime,
-      'logDescription': logDescription,
-      'logGear': logGear,
-      'logMealName': logMealName,
-      'logRecipes': logRecipes,
-      'logFoodItems': logFoodItems,
-      'workoutType': workoutType,
+    final log = {
+      'logTitle': _logTitleController.text,
+      'logRoutine': _logRoutineController.text,
+      'logDate': _logDateController.text,
+      'logTime': _logTimeController.text,
+      'logDescription': _logDescriptionController.text,
+      'logGear': _logGearController.text,
+      'logMealName': _logMealNameController.text,
+      'logRecipes': _logRecipesController.text,
+      'logFoodItems': _logFoodItemsController.text,
+      'workoutType': _workoutTypeController.text
     };
-
-    // Insert the log data into the database
-    final dbHelper = DatabaseHelper();
-    final logId = await dbHelper.insertLog(logData);
-
-    // Now you can handle the submission of the exercise log data if needed
-    // ...
-
-    // Clear the text fields after submission
-    _clearTextFields();
+    await DatabaseHelper().insertLog(log);
+      Navigator.of(context).push(
+        MaterialPageRoute(
+            builder: (context) => HomeScreen()),
+      );
   }
 
-  void _clearTextFields() {
-    _logTitleController.clear();
-    _logRoutineController.clear();
-    _logDateController.clear();
-    _logTimeController.clear();
-    _logDescriptionController.clear();
-    _logGearController.clear();
-    _logMealNameController.clear();
-    _logRecipesController.clear();
-    _logFoodItemsController.clear();
+  void _pickDate() async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2025),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  void _pickTime() async {
+    TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    );
+    if (picked != null && picked != _selectedTime) {
+      setState(() {
+        _selectedTime = picked;
+      });
+    }
   }
 
   void addExercise(Exercise exercise) {
@@ -168,13 +170,15 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
                 controller: _logRoutineController,
                 decoration: InputDecoration(labelText: 'Routine Created'),
               ),
-            TextField(
-              controller: _logDateController,
-              decoration: InputDecoration(labelText: 'Date'),
+            ListTile(
+              title: Text('Date: ${_dateFormat.format(_selectedDate)}'),
+              trailing: Icon(Icons.calendar_today),
+              onTap: _pickDate,
             ),
-            TextField(
-              controller: _logTimeController,
-              decoration: InputDecoration(labelText: 'Time'),
+            ListTile(
+              title: Text('Time: ${_timeFormat.format(DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, _selectedTime.hour, _selectedTime.minute))}'),
+              trailing: Icon(Icons.access_time),
+              onTap: _pickTime,
             ),
             TextField(
               controller: _logDescriptionController,
