@@ -107,12 +107,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     onSelected: (String result) {
                       if (result == 'delete') {
                         _deleteLog(log['id']);
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (BuildContext context) => super.widget));
                       }
                     },
                     itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                       const PopupMenuItem<String>(
                         value: 'delete',
-                        child: Text('Delete Log'),
+                        child: Text('Delete'),
                       ),
                     ],
                   ),

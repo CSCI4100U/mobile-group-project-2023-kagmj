@@ -1,3 +1,4 @@
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -8,11 +9,14 @@ import 'push_notification.dart';
 PushNotificationService _notificationService = PushNotificationService();
 
 class ProfileSetupScreen extends StatefulWidget {
+  const ProfileSetupScreen({super.key});
+
   @override
   _ProfileSetupScreenState createState() => _ProfileSetupScreenState();
 }
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
+  // Variables and Controllers
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final List<String> _countries = ['USA', 'Canada', 'UK'];
@@ -23,7 +27,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final TextEditingController _heightController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
 
-
+  // Profile Setup Function - Sets up profile information and saves to Firebase
   Future<void> _completeProfileSetup() async {
     if (_formKey.currentState!.validate()) {
       // Get the current user
@@ -47,12 +51,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         // Navigate to the home screen
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       } else {
         // Handle the case where there is no current user logged in
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No user is signed in.')),
+          const SnackBar(content: Text('No user is signed in.')),
         );
       }
     }
@@ -61,7 +65,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Complete Your Profile')),
+      appBar: AppBar(title: const Text('Complete Your Profile')),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -73,7 +77,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 children: <Widget>[
                   TextFormField(
                     controller: _nameController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Name',
                     ),
                     validator: (value) {
@@ -84,7 +88,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     },
                   ),
                   DropdownButtonFormField(
-                    decoration: InputDecoration(labelText: 'Country'),
+                    decoration: const InputDecoration(labelText: 'Country'),
                     value: _selectedCountry,
                     onChanged: (String? newValue) {
                       setState(() {
@@ -104,7 +108,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     decoration: InputDecoration(
                         labelText: 'Birthday',
                         suffixIcon: IconButton(
-                          icon: Icon(Icons.calendar_today),
+                          icon: const Icon(Icons.calendar_today),
                           onPressed: () async {
                             DateTime? pickedDate = await showDatePicker(
                               context: context,
@@ -128,7 +132,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     },
                   ),
                   DropdownButtonFormField(
-                    decoration: InputDecoration(labelText: 'Gender'),
+                    decoration: const InputDecoration(labelText: 'Gender'),
                     value: _selectedGender,
                     onChanged: (String? newValue) {
                       setState(() {
@@ -145,7 +149,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   ),
                   TextFormField(
                     controller: _heightController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Height (cm)',
                     ),
                     validator: (value) {
@@ -157,7 +161,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   ),
                   TextFormField(
                     controller: _weightController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Weight (kg)',
                     ),
                     validator: (value) {
@@ -167,10 +171,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _completeProfileSetup,
-                    child: Text('Complete Profile'),
+                    child: const Text('Complete Profile'),
                   ),
                 ],
               ),

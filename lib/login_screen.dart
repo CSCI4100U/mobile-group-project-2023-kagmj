@@ -1,3 +1,4 @@
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,6 +6,8 @@ import 'registration_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -15,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
+  // Login Function - Uses Firebase to check user credentials
   Future<void> _login(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       try {
@@ -37,18 +41,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // Check if the userProfile exists and has data
         if (userProfile.exists && userProfile.data() != null) {
-          // Safely access the data without using the '!' operator
           Map<String, dynamic> userData = userProfile.data()
-              as Map<String, dynamic>; // Cast the data to the correct type
+              as Map<String, dynamic>;
           bool profileSetupComplete = userData['profileSetupComplete']
                   as bool? ??
-              false; // Cast to bool and provide a default value of false if the field doesn't exist
+              false;
 
           // If the 'profileSetupComplete' field is true, navigate to HomeScreen, else to ProfileSetup
           if (profileSetupComplete) {
             Navigator.pushReplacementNamed(context, '/home');
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Welcome Back!')),
+              const SnackBar(content: Text('Welcome Back!')),
             );
           } else {
             Navigator.pushReplacementNamed(context, '/profileSetup');
@@ -66,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
           errorMessage = 'Wrong password provided.';
         } else if (e.code == 'user-disabled') {
           errorMessage = 'User has been disabled.';
-        };
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
@@ -74,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
       } catch (e) {
         // Handle other errors
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An error occurred. Please try again later.')),
+          const SnackBar(content: Text('An error occurred. Please try again later.')),
         );
       }
     }
@@ -83,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF0FA7E0),
+      backgroundColor: const Color(0xFF0FA7E0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Center(
@@ -91,18 +94,20 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              SizedBox(height: 48),
+              const SizedBox(height: 48),
+              // App Logo Centered on the Screen
               SizedBox(height: MediaQuery.of(context).size.height * 0.2),
               Image.asset(
                 'assets/logo.png',
                 height: 120.0,
               ),
-              SizedBox(height: 48), // Space between logo and form
+              const SizedBox(height: 48),
               Form(
                 key: _formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Input Fields for Email and Password
                     TextFormField(
                       controller: _emailController,
                       decoration: InputDecoration(
@@ -111,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white),
+                          borderSide: const BorderSide(color: Colors.white),
                           borderRadius: BorderRadius.circular(8.0),
                         ),
                       ),
@@ -125,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 20.0),
+                    const SizedBox(height: 20.0),
                     TextFormField(
                       controller: _passwordController,
                       decoration: InputDecoration(
@@ -134,9 +139,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white),
+                          borderSide: const BorderSide(color: Colors.white),
                           borderRadius: BorderRadius.circular(8.0),
                         ),
+                        // Toggle password viewing
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword
@@ -158,28 +164,29 @@ class _LoginScreenState extends State<LoginScreen> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () => _login(context),
-                      child: Text('Login'),
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
-                        backgroundColor: Color(0xFFFFA726), // Text color
+                        backgroundColor: const Color(0xFFFFA726),
                       ),
+                      child: const Text('Login'),
                     ),
+                    // Navigate to registration screen
                     TextButton(
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                              builder: (context) => RegistrationScreen()),
+                              builder: (context) => const RegistrationScreen()),
                         );
                       },
-                      child: Text(
-                        "Don't have an account? Register here",
-                        style: TextStyle(color: Colors.white),
-                      ),
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.blue,
+                      ),
+                      child: const Text(
+                        "Don't have an account? Register here",
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ],

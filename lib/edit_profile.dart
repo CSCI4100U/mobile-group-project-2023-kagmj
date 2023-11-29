@@ -1,19 +1,16 @@
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
 import 'package:final_project/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
-// EditProfileScreen Class
-// Creates the screen state for reuse
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
   @override
   _EditProfileScreenState createState() => _EditProfileScreenState();
 }
 
-// _EditProfileScreenState Class
-// Creates the EditProfile Screen
 class _EditProfileScreenState extends State<EditProfileScreen> {
   // Initialize profile options
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -27,14 +24,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _weightController = TextEditingController();
 
   @override
-  // Load in any existing profile information
   void initState() {
     super.initState();
     _loadExistingProfileData();
   }
 
-  // _loadExistingProfileData Method
-  // Loads in current user's data from Firestore database
+  // _loadExistingProfileData Function - Loads in current user's data from Firestore database
   void _loadExistingProfileData() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -54,8 +49,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  // _saveProfile Method
-  // Saves updated information to the Firestore database
+  // _saveProfile Function - Saves updated information to the Firestore database
   void _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       User? user = FirebaseAuth.instance.currentUser;
@@ -68,7 +62,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           'height': _heightController.text,
           'weight': _weightController.text,
         }, SetOptions(merge: true));
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => ProfileScreen()));
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const ProfileScreen()));
       }
     }
   }
@@ -77,17 +71,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit Your Profile'),
+        title: const Text('Edit Your Profile'),
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: ListView(
             children: <Widget>[
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: 'Name'),
+                decoration: const InputDecoration(labelText: 'Name'),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter your name';
@@ -96,7 +90,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 },
               ),
               DropdownButtonFormField(
-                decoration: InputDecoration(labelText: 'Country'),
+                decoration: const InputDecoration(labelText: 'Country'),
                 value: _selectedCountry,
                 onChanged: (String? newValue) {
                   setState(() {
@@ -116,7 +110,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 decoration: InputDecoration(
                     labelText: 'Birthday',
                     suffixIcon: IconButton(
-                      icon: Icon(Icons.calendar_today),
+                      icon: const Icon(Icons.calendar_today),
                       onPressed: () async {
                         DateTime? pickedDate = await showDatePicker(
                           context: context,
@@ -140,7 +134,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 },
               ),
               DropdownButtonFormField(
-                decoration: InputDecoration(labelText: 'Gender'),
+                decoration: const InputDecoration(labelText: 'Gender'),
                 value: _selectedGender,
                 onChanged: (String? newValue) {
                   setState(() {
@@ -157,7 +151,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               TextFormField(
                 controller: _heightController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Height (cm)',
                 ),
                 validator: (value) {
@@ -169,7 +163,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               TextFormField(
                 controller: _weightController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Weight (kg)',
                 ),
                 validator: (value) {
@@ -179,10 +173,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   return null;
                 },
               ),
-              // Add fields for other profile information
               ElevatedButton(
                 onPressed: _saveProfile,
-                child: Text('Save Changes'),
+                child: const Text('Save Changes'),
               ),
             ],
           ),

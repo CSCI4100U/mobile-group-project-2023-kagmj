@@ -13,6 +13,7 @@ class CreateLogScreen extends StatefulWidget {
 }
 
 class _CreateLogScreenState extends State<CreateLogScreen> {
+  // Variables and Controller
   final TextEditingController _logTitleController = TextEditingController();
   final TextEditingController _logRoutineController = TextEditingController();
   final TextEditingController _logDateController = TextEditingController();
@@ -29,12 +30,14 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
   @override
   void initState() {
     super.initState();
+    // Initialize Starting Values
     DateTime now = DateTime.now();
     _logTitleController.text= "Morning Workout";
     _logDateController.text = DateFormat('MMMM dd, yyyy').format(now);
     _logTimeController.text = DateFormat('h:mm a').format(now);
   }
 
+  // SubmitLog Function - Saves values from input fields and submits to local database
   void _submitLog() async {
     final log = {
       'logTitle': _logTitleController.text,
@@ -47,10 +50,11 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
     await DatabaseHelper().insertLog(log);
       Navigator.of(context).push(
         MaterialPageRoute(
-            builder: (context) => HomeScreen()),
+            builder: (context) => const HomeScreen()),
       );
   }
 
+  // Pick Date Function - Implements date picker functionality
   void _pickDate() async {
     DateTime? picked = await showDatePicker(
       context: context,
@@ -66,6 +70,7 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
     }
   }
 
+  // Pick Time Function - Implements time picker functionality
   void _pickTime() async {
     TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -79,12 +84,6 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
         _logTimeController.text = formattedTime;
       });
     }
-  }
-
-  void addExercise(Exercise exercise) {
-    setState(() {
-      exercises.add(exercise);
-    });
   }
 
   @override

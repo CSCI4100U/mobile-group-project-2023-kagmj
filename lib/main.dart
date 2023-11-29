@@ -22,18 +22,18 @@ Future<void> main() async {
       print('Firebase initialized successfully');
     }
 
-    // Initialize push notifications
-    PushNotificationService().initialize();
-
   } catch (e) {
     if (kDebugMode) {
       print('Error initializing Firebase: $e');
     }
   }
+
+  // Initialize push notifications
+  PushNotificationService().initialize();
+
   // Run App
   SharedPreferences prefs = await SharedPreferences.getInstance();
   bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-
   runApp(MyApp(isLoggedIn: isLoggedIn));
 }
 
@@ -52,10 +52,10 @@ class MyApp extends StatelessWidget {
       // Define routes to different screens
       routes: {
         '/': (context) => LoginScreen(),
-        '/home': (context) => HomeScreen(),
+        '/home': (context) => const HomeScreen(),
         '/profileSetup': (context) => ProfileSetupScreen(),
       },
-      // Set the initial route
+      // If user is already logged in, go to home page, if not, go to login
       initialRoute: isLoggedIn ? '/home' : '/',
     );
   }

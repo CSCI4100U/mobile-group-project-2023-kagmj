@@ -1,8 +1,10 @@
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously, sort_child_properties_last
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-
 class RegistrationScreen extends StatefulWidget {
+  const RegistrationScreen({super.key});
+
   @override
   _RegistrationScreenState createState() => _RegistrationScreenState();
 }
@@ -13,16 +15,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
+  // Register Function - Creates an account and saves to Firebase
   Future<void> _register(BuildContext context) async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
         // Use Firebase Authentication to create a new user
-        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text,
           password: _passwordController.text,
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration successful!')),
+          const SnackBar(content: Text('Registration successful!')),
         );
 
         // Navigate to the profile setup page instead of the home screen
@@ -35,18 +38,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         } else if (e.code == 'email-already-in-use') {
           errorMessage = 'The account already exists for that email.';
         }
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An error occurred. Please try again later.')),
+          const SnackBar(content: Text('An error occurred. Please try again later.')),
         );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill out the form correctly.')),
+        const SnackBar(content: Text('Please fill out the form correctly.')),
       );
     }
   }
@@ -54,13 +56,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF0FA7E0),
+      backgroundColor: const Color(0xFF0FA7E0),
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text('Register'),
+        title: const Text('Register'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -69,7 +71,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              SizedBox(height: 250),
+              const SizedBox(height: 250),
               Form(
                 key: _formKey,
                 child: Column(
@@ -83,7 +85,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white),
+                          borderSide: const BorderSide(color: Colors.white),
                           borderRadius: BorderRadius.circular(8.0),
                         ),
                       ),
@@ -97,7 +99,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 20.0),
+                    const SizedBox(height: 20.0),
                     TextFormField(
                       controller: _passwordController,
                       decoration: InputDecoration(
@@ -106,7 +108,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white),
+                          borderSide: const BorderSide(color: Colors.white),
                           borderRadius: BorderRadius.circular(8.0),
                         ),
                         suffixIcon: IconButton(
@@ -133,14 +135,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 20),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () => _register(context),
-                      child: Text('Register'),
+                      child: const Text('Register'),
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
-                        backgroundColor: Color(0xFFFFA726), // Text color
+                        backgroundColor: const Color(0xFFFFA726), // Text color
                       ),
                     ),
                   ],
