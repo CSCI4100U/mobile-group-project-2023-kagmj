@@ -92,6 +92,7 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
       appBar: AppBar(
         title: const Text('Create Log'),
         automaticallyImplyLeading: false,
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

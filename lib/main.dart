@@ -51,9 +51,9 @@ class MyApp extends StatelessWidget {
       ),
       // Define routes to different screens
       routes: {
-        '/': (context) => LoginScreen(),
+        '/': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
-        '/profileSetup': (context) => ProfileSetupScreen(),
+        '/profileSetup': (context) => const ProfileSetupScreen(),
       },
       // If user is already logged in, go to home page, if not, go to login
       initialRoute: isLoggedIn ? '/home' : '/',

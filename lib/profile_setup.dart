@@ -65,7 +65,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Complete Your Profile')),
+      backgroundColor: const Color(0xFF0FA7E0),
+      appBar: AppBar(
+          title: const Text('Complete Your Profile'),
+        centerTitle: true,
+      ),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -77,8 +81,15 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 children: <Widget>[
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Name',
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.white),
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -87,8 +98,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 16),
                   DropdownButtonFormField(
-                    decoration: const InputDecoration(labelText: 'Country'),
+                    decoration: InputDecoration(
+                        labelText: 'Country',
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.white),
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ),
                     value: _selectedCountry,
                     onChanged: (String? newValue) {
                       setState(() {
@@ -103,10 +124,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     }).toList(),
                     validator: (value) => value == null ? 'Please select a country' : null,
                   ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _birthdayController,
                     decoration: InputDecoration(
                         labelText: 'Birthday',
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderSide: const BorderSide(color: Colors.white),
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.calendar_today),
                           onPressed: () async {
@@ -131,8 +160,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 16),
                   DropdownButtonFormField(
-                    decoration: const InputDecoration(labelText: 'Gender'),
+                    decoration: InputDecoration(
+                        labelText: 'Gender',
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.white),
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ),
                     value: _selectedGender,
                     onChanged: (String? newValue) {
                       setState(() {
@@ -147,10 +186,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     }).toList(),
                     validator: (value) => value == null ? 'Please select your gender' : null,
                   ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _heightController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Height (cm)',
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.white),
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -159,10 +206,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _weightController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Weight (kg)',
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.white),
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -174,6 +229,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _completeProfileSetup,
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: const Color(0xFFFFA726), // Text color
+                    ),
                     child: const Text('Complete Profile'),
                   ),
                 ],

@@ -49,6 +49,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: const Text("Profile"),
         automaticallyImplyLeading: false,
+        centerTitle: true,
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.settings),

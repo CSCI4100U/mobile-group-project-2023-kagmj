@@ -133,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return <Widget>[
       _buildHomeScreen(),
       const Scaffold(body: CreateLogScreen()),
-      Scaffold(body: ProfileScreen()),
+      const Scaffold(body: ProfileScreen()),
     ];
   }
 
@@ -141,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final widgetOptions = _buildWidgetOptions();
     return Scaffold(
-      appBar: _selectedIndex == 0 ? AppBar(title: const Text("Home"), automaticallyImplyLeading: false,) : null,
+      appBar: _selectedIndex == 0 ? AppBar(title: const Text("Home"), automaticallyImplyLeading: false, centerTitle: true,) : null,
       body: Center(
         child: widgetOptions.elementAt(_selectedIndex),
       ),
