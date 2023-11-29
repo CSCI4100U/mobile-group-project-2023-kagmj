@@ -97,6 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(log['logDescription'] ?? 'No Description', style: const TextStyle(fontSize: 16)),
+                      Text('Duration: ${_logs[index]['logDuration'] ?? 'N/A'}'),
                     ],
                   ),
                 ),

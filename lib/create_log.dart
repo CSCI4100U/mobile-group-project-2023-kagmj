@@ -26,6 +26,64 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
   TimeOfDay _selectedTime = TimeOfDay.now();
   final DateFormat _dateFormat = DateFormat('MMMM dd, yyyy');
   final DateFormat _timeFormat = DateFormat('h:mm a');
+  final List<String> _availableGear = ['Dumbbells', 'Barbells', 'Kettlebells', 'Resistance Bands', 'Treadmill', 'Exercise Bike'];
+  final List<String> _selectedGear = [];
+  bool _isDropdownOpened = false;
+  int _selectedHours = 0;
+  int _selectedMinutes = 0;
+  int _selectedSeconds = 0;
+
+  Widget _buildPicker(String title, int minValue, int maxValue, int currentValue, ValueChanged<int> onChanged) {
+    return Expanded(
+      child: Column(
+        children: <Widget>[
+          Text(title),
+          Expanded(
+            child: ListWheelScrollView.useDelegate(
+              itemExtent: 40,
+              perspective: 0.005,
+              diameterRatio: 1.6,
+              physics: const FixedExtentScrollPhysics(),
+              controller: FixedExtentScrollController(initialItem: currentValue),
+              onSelectedItemChanged: onChanged,
+              childDelegate: ListWheelChildLoopingListDelegate(
+                children: List<Widget>.generate(
+                  maxValue - minValue + 1,
+                      (index) => Center(child: Text((minValue + index).toString())),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildGearDropdown() {
+    return Visibility(
+      visible: _isDropdownOpened,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: _availableGear.map((gear) {
+          return CheckboxListTile(
+            title: Text(gear),
+            value: _selectedGear.contains(gear),
+            onChanged: (bool? value) {
+              setState(() {
+                if (value == true) {
+                  _selectedGear.add(gear);
+                } else {
+                  _selectedGear.remove(gear);
+                }
+              });
+            },
+          );
+        }).toList(),
+      ),
+    );
+  }
+
 
   @override
   void initState() {
@@ -45,7 +103,9 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
       'logDate': _logDateController.text,
       'logTime': _logTimeController.text,
       'logDescription': _logDescriptionController.text,
-      'workoutType': _workoutTypeController.text
+      'workoutType': _workoutTypeController.text,
+      'selectedGear': _selectedGear.join(', '),
+      'logDuration': '${_selectedHours.toString().padLeft(2, '0')}:${_selectedMinutes.toString().padLeft(2, '0')}:${_selectedSeconds.toString().padLeft(2, '0')}',
     };
     await DatabaseHelper().insertLog(log);
       Navigator.of(context).push(
@@ -65,7 +125,7 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
-        _logDateController.text = DateFormat('MMMM dd, yyyy').format(picked); // Format: November 23, 2023
+        _logDateController.text = DateFormat('MMMM dd, yyyy').format(picked);
       });
     }
   }
@@ -85,6 +145,32 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
       });
     }
   }
+
+  void _showDurationPicker() {
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext builder) {
+          return SizedBox(
+            height: 200,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                _buildPicker('Hours', 0, 23, _selectedHours, (newValue) {
+                  setState(() => _selectedHours = newValue);
+                }),
+                _buildPicker('Minutes', 0, 59, _selectedMinutes, (newValue) {
+                  setState(() => _selectedMinutes = newValue);
+                }),
+                _buildPicker('Seconds', 0, 59, _selectedSeconds, (newValue) {
+                  setState(() => _selectedSeconds = newValue);
+                }),
+              ],
+            ),
+          );
+        }
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +195,7 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.white),
+                  borderSide: const BorderSide(color: Colors.black),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
@@ -119,13 +205,14 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
             const SizedBox(height: 4),
             TextField(
               controller: _logDescriptionController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                   labelText: 'Share more about your activity',
                 floatingLabelBehavior: FloatingLabelBehavior.never,
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
+                  borderSide: const BorderSide(color: Colors.black),
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
             ),
@@ -135,12 +222,13 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
               FormField<String>(
                 builder: (FormFieldState<String> state) {
                   return InputDecorator(
-                    decoration: const InputDecoration(labelText: 'Workout Type',
+                    decoration: InputDecoration(labelText: 'Workout Type',
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white),
+                        borderSide: const BorderSide(color: Colors.black),
+                        borderRadius: BorderRadius.circular(8.0),
                       ),),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
@@ -168,6 +256,17 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
                   );
                 },
               ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _isDropdownOpened = !_isDropdownOpened;
+                });
+              },
+              child: const Text('Select Gear'),
+            ),
+            _buildGearDropdown(),
+
             const SizedBox(height: 16),
             const Text("Date"),
             const SizedBox(height: 4),
@@ -198,6 +297,19 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
                 onTap: _pickTime,
               ),
             ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _showDurationPicker,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                side: const BorderSide(color: Colors.black),
+              ),
+              child: Text(
+                'Duration: $_selectedHours hrs $_selectedMinutes min $_selectedSeconds sec',
+                style: const TextStyle(color: Colors.black), // Black text
+              ),
+            ),
+
             const SizedBox(height: 16),
             // Submit Log Button
             ElevatedButton(

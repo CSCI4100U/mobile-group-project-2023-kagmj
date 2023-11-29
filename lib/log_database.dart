@@ -22,27 +22,33 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'your_database.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (Database db, int version) async {
-        // Create tables here
         await db.execute('''
-          CREATE TABLE $tableName (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            logTitle TEXT,
-            logRoutine TEXT,
-            logDate TEXT,
-            logTime TEXT,
-            logDescription TEXT,
-            logGear TEXT,
-            logMealName TEXT,
-            logRecipes TEXT,
-            logFoodItems TEXT,
-            workoutType TEXT
-          )
-        ''');
+  CREATE TABLE $tableName (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    logTitle TEXT,
+    logRoutine TEXT,
+    logDate TEXT,
+    logTime TEXT,
+    logDescription TEXT,
+    workoutType TEXT,
+    selectedGear TEXT,
+    logDuration TEXT
+  )
+''');
       },
+      onUpgrade: _onUpgrade,
     );
   }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE $tableName ADD COLUMN selectedGear TEXT');
+      await db.execute('ALTER TABLE $tableName ADD COLUMN logDuration TEXT');
+    }
+  }
+
 
   Future<int> insertLog(Map<String, dynamic> log) async {
     Database db = await database;
