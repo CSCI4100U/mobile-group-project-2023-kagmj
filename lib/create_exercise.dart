@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'exercise.dart';
 
 class CreateExerciseScreen extends StatefulWidget {
-  final Function(Exercise) addExercise;
-
-  CreateExerciseScreen({required this.addExercise});
+  const CreateExerciseScreen({super.key});
 
   @override
   _CreateExerciseScreenState createState() => _CreateExerciseScreenState();

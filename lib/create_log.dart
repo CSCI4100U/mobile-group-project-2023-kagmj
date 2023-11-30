@@ -28,7 +28,7 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
   final DateFormat _timeFormat = DateFormat('h:mm a');
   final List<String> _availableGear = ['Dumbbells', 'Barbells', 'Kettlebells', 'Resistance Bands', 'Treadmill', 'Exercise Bike'];
   final List<String> _selectedGear = [];
-  bool _isDropdownOpened = false;
+  final bool _isDropdownOpened = false;
   int _selectedHours = 0;
   int _selectedMinutes = 0;
   int _selectedSeconds = 0;
@@ -59,7 +59,6 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
     );
   }
 
-
   Widget _buildGearDropdown() {
     return Visibility(
       visible: _isDropdownOpened,
@@ -84,7 +83,6 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
     );
   }
 
-
   @override
   void initState() {
     super.initState();
@@ -98,6 +96,7 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
   // SubmitLog Function - Saves values from input fields and submits to local database
   void _submitLog() async {
     final log = {
+      'type' : 'workout',
       'logTitle': _logTitleController.text,
       'logRoutine': _logRoutineController.text,
       'logDate': _logDateController.text,
@@ -176,7 +175,7 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Log'),
+        title: const Text('Log Exercise'),
         automaticallyImplyLeading: false,
         centerTitle: true,
       ),
@@ -256,16 +255,16 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
                   );
                 },
               ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _isDropdownOpened = !_isDropdownOpened;
-                });
-              },
-              child: const Text('Select Gear'),
-            ),
-            _buildGearDropdown(),
+            // const SizedBox(height: 16),
+            // ElevatedButton(
+            //   onPressed: () {
+            //     setState(() {
+            //       _isDropdownOpened = !_isDropdownOpened;
+            //     });
+            //   },
+            //   child: const Text('Select Gear'),
+            // ),
+            // _buildGearDropdown(),
 
             const SizedBox(height: 16),
             const Text("Date"),

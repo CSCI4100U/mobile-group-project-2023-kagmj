@@ -22,7 +22,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'your_database.db');
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (Database db, int version) async {
         await db.execute('''
   CREATE TABLE $tableName (
@@ -34,7 +34,10 @@ class DatabaseHelper {
     logDescription TEXT,
     workoutType TEXT,
     selectedGear TEXT,
-    logDuration TEXT
+    logDuration TEXT,
+    type TEXT,
+    foodItems TEXT,
+    recipes TEXT
   )
 ''');
       },
@@ -43,9 +46,10 @@ class DatabaseHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute('ALTER TABLE $tableName ADD COLUMN selectedGear TEXT');
-      await db.execute('ALTER TABLE $tableName ADD COLUMN logDuration TEXT');
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE $tableName ADD COLUMN foodItems TEXT');
+      await db.execute('ALTER TABLE $tableName ADD COLUMN type TEXT');
+      await db.execute('ALTER TABLE $tableName ADD COLUMN recipes TEXT');
     }
   }
 

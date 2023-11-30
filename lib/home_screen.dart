@@ -1,9 +1,12 @@
-// ignore_for_file: library_private_types_in_public_api
+// ignore_for_file: library_private_types_in_public_api, deprecated_member_use
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:final_project/log_database.dart';
+import 'package:flutter/gestures.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'create_log.dart';
+import 'create_meals.dart';
 import 'profile.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -62,7 +65,14 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: _logs.length,
         itemBuilder: (BuildContext context, int index) {
           var log = _logs[index];
-          String displayTitle = "${log['logTitle'] ?? 'No Title'} - ${log['workoutType'] ?? 'No Workout Type'}";
+          String displayTitle;
+          if (log['type'] == 'meal') {
+            displayTitle = log['logTitle'] ?? 'No Title';
+          } else if (log['type'] == 'workout') {
+            displayTitle = "${log['logTitle'] ?? 'No Title'} - ${log['workoutType'] ?? 'No Workout Type'}";
+          } else {
+            displayTitle = log['logTitle'] ?? 'No Title';
+          }
           return Card(
             margin: const EdgeInsets.all(8.0),
             child: Stack(
@@ -97,7 +107,32 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(log['logDescription'] ?? 'No Description', style: const TextStyle(fontSize: 16)),
-                      Text('Duration: ${_logs[index]['logDuration'] ?? 'N/A'}'),
+                      if (log['type'] == 'workout') ...[
+                        const SizedBox(height: 15),
+                        const Text(
+                            "Time",
+                            style: TextStyle(fontSize: 18)
+                        ),
+                        Text('${log['logDuration'] ?? 'N/A'}'),
+                      ],
+                      if (log['type'] == 'meal') ...[
+                        const SizedBox(height: 15),
+                        const Text(
+                            "Food Items:",
+                            style: TextStyle(fontSize: 18)
+                        ),
+                        Text(log['foodItems'] ?? 'No Food Items'),
+                        const SizedBox(height: 15),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: RichText(
+                            text: TextSpan(
+                              children: _buildTextSpans(log['recipes']),
+                              style: DefaultTextStyle.of(context).style,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -133,9 +168,53 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Widget> _buildWidgetOptions() {
     return <Widget>[
       _buildHomeScreen(),
+      const Scaffold(body: CreateMealScreen()),
       const Scaffold(body: CreateLogScreen()),
       const Scaffold(body: ProfileScreen()),
     ];
+  }
+
+  List<TextSpan> _buildTextSpans(String text) {
+    final RegExp linkRegExp = RegExp(r'\bhttps?:\/\/\S+\b', caseSensitive: false);
+    final Iterable<RegExpMatch> matches = linkRegExp.allMatches(text);
+
+    if (matches.isEmpty) {
+      return [TextSpan(text: text)];
+    }
+
+    final List<TextSpan> spans = [];
+    int start = 0;
+
+    for (final RegExpMatch match in matches) {
+      final String linkText = match.group(0)!;
+      final int startIndex = match.start;
+      final int endIndex = match.end;
+
+      if (startIndex > start) {
+        spans.add(TextSpan(text: text.substring(start, startIndex)));
+      }
+
+      spans.add(
+        TextSpan(
+          text: linkText,
+          style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () async {
+              if (await canLaunch(linkText)) {
+                await launch(linkText);
+              }
+            },
+        ),
+      );
+
+      start = endIndex;
+    }
+
+    if (start < text.length) {
+      spans.add(TextSpan(text: text.substring(start)));
+    }
+
+    return spans;
   }
 
   @override
@@ -153,8 +232,12 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.create),
-            label: 'Create Log',
+            icon: Icon(Icons.restaurant),
+            label: 'Log Meals',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center),
+            label: 'Log Workout',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
@@ -163,8 +246,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.amber[800],
+        unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
       ),
+
     );
   }
 
