@@ -1,8 +1,8 @@
 // ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
+import 'package:final_project/routine.dart';
 import 'package:flutter/material.dart';
 import 'package:final_project/log_database.dart';
 import 'package:intl/intl.dart';
-import 'exercise.dart';
 import 'home_screen.dart';
 
 class CreateLogScreen extends StatefulWidget {
@@ -21,17 +21,16 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
   final TextEditingController _logDescriptionController = TextEditingController();
   final TextEditingController _workoutTypeController = TextEditingController(text: "Chest"); // Set the initial value to "Chest"
 
-  List<Exercise> exercises = [];
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
   final DateFormat _dateFormat = DateFormat('MMMM dd, yyyy');
   final DateFormat _timeFormat = DateFormat('h:mm a');
-  final List<String> _availableGear = ['Dumbbells', 'Barbells', 'Kettlebells', 'Resistance Bands', 'Treadmill', 'Exercise Bike'];
-  final List<String> _selectedGear = [];
   final bool _isDropdownOpened = false;
   int _selectedHours = 0;
   int _selectedMinutes = 0;
   int _selectedSeconds = 0;
+  int? selectedRoutine;
+  List<Routine> routines = [];
 
   Widget _buildPicker(String title, int minValue, int maxValue, int currentValue, ValueChanged<int> onChanged) {
     return Expanded(
@@ -59,33 +58,11 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
     );
   }
 
-  Widget _buildGearDropdown() {
-    return Visibility(
-      visible: _isDropdownOpened,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: _availableGear.map((gear) {
-          return CheckboxListTile(
-            title: Text(gear),
-            value: _selectedGear.contains(gear),
-            onChanged: (bool? value) {
-              setState(() {
-                if (value == true) {
-                  _selectedGear.add(gear);
-                } else {
-                  _selectedGear.remove(gear);
-                }
-              });
-            },
-          );
-        }).toList(),
-      ),
-    );
-  }
 
   @override
   void initState() {
     super.initState();
+    loadRoutines();
     // Initialize Starting Values
     DateTime now = DateTime.now();
     _logTitleController.text= "Morning Workout";
@@ -93,18 +70,25 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
     _logTimeController.text = DateFormat('h:mm a').format(now);
   }
 
+  void loadRoutines() async {
+    // Load routines from database and set state
+    final List<Routine> loadedRoutines = await DatabaseHelper().getRoutines();
+    setState(() {
+      routines = loadedRoutines;
+    });
+  }
+
   // SubmitLog Function - Saves values from input fields and submits to local database
   void _submitLog() async {
     final log = {
       'type' : 'workout',
       'logTitle': _logTitleController.text,
-      'logRoutine': _logRoutineController.text,
       'logDate': _logDateController.text,
       'logTime': _logTimeController.text,
       'logDescription': _logDescriptionController.text,
       'workoutType': _workoutTypeController.text,
-      'selectedGear': _selectedGear.join(', '),
       'logDuration': '${_selectedHours.toString().padLeft(2, '0')}:${_selectedMinutes.toString().padLeft(2, '0')}:${_selectedSeconds.toString().padLeft(2, '0')}',
+      'routineID' : selectedRoutine,
     };
     await DatabaseHelper().insertLog(log);
       Navigator.of(context).push(
@@ -255,16 +239,25 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
                   );
                 },
               ),
-            // const SizedBox(height: 16),
-            // ElevatedButton(
-            //   onPressed: () {
-            //     setState(() {
-            //       _isDropdownOpened = !_isDropdownOpened;
-            //     });
-            //   },
-            //   child: const Text('Select Gear'),
-            // ),
-            // _buildGearDropdown(),
+
+            const SizedBox(height: 16),
+            DropdownButtonFormField<int>(
+              value: selectedRoutine,
+              onChanged: (int? newValue) {
+                setState(() {
+                  selectedRoutine = newValue;
+                });
+              },
+              items: routines.map<DropdownMenuItem<int>>((Routine routine) {
+                return DropdownMenuItem<int>(
+                  value: routine.id,
+                  child: Text(routine.name),
+                );
+              }).toList(),
+              decoration: InputDecoration(
+                labelText: 'Select Routine',
+              ),
+            ),
 
             const SizedBox(height: 16),
             const Text("Date"),

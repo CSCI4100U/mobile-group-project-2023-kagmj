@@ -1,10 +1,12 @@
 // ignore_for_file: library_private_types_in_public_api, deprecated_member_use
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:final_project/view_routine.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:final_project/log_database.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'create_routine.dart';
 import 'create_log.dart';
 import 'create_meals.dart';
 import 'profile.dart';
@@ -114,6 +116,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: TextStyle(fontSize: 18)
                         ),
                         Text('${log['logDuration'] ?? 'N/A'}'),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Convert routineId to String if RoutineDetailsScreen expects a String
+                            String routineIdAsString = log['routineId'].toString();
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => RoutineDetailsScreen(routineId: routineIdAsString)));
+                          },
+                          child: Text('View Routine'),
+                        ),
+
+
                       ],
                       if (log['type'] == 'meal') ...[
                         const SizedBox(height: 15),
@@ -170,6 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _buildHomeScreen(),
       const Scaffold(body: CreateMealScreen()),
       const Scaffold(body: CreateLogScreen()),
+      const Scaffold(body: CreateRoutinePage()),
       const Scaffold(body: ProfileScreen()),
     ];
   }
@@ -238,6 +251,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.fitness_center),
             label: 'Log Workout',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.access_time_rounded),
+            label: 'Routines',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
