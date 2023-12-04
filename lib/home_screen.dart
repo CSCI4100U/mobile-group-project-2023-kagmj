@@ -113,9 +113,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 15),
                         const Text(
                             "Time",
-                            style: TextStyle(fontSize: 18)
+                            style: TextStyle(fontSize: 14)
                         ),
-                        Text('${log['logDuration'] ?? 'N/A'}'),
+                        Text('${log['logDuration'] ?? 'N/A'}', style: const TextStyle(fontSize: 20)),
+                        const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () {
                             // Convert routineId to String if RoutineDetailsScreen expects a String
@@ -124,8 +125,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                           child: Text('View Routine'),
                         ),
-
-
                       ],
                       if (log['type'] == 'meal') ...[
                         const SizedBox(height: 15),

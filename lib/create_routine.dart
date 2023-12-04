@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
 import 'package:flutter/material.dart';
 import 'log_database.dart';
 import 'routine.dart';
@@ -48,7 +49,7 @@ class _CreateRoutinePageState extends State<CreateRoutinePage> {
 
       // Show a SnackBar upon successful save
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Routine successfully saved!'),
           duration: Duration(seconds: 2),
         ),
@@ -69,64 +70,129 @@ class _CreateRoutinePageState extends State<CreateRoutinePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create Routine'),
+        title: const Text('Create Routine'),
         automaticallyImplyLeading: false,
         centerTitle: true,
       ),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             children: <Widget>[
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text("Title"),
+              ),
+              const SizedBox(height: 4),
               TextFormField(
-                decoration: InputDecoration(labelText: 'Routine Name'),
+                decoration: InputDecoration(
+                    labelText: 'Routine Name',
+                  floatingLabelBehavior: FloatingLabelBehavior.never,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.black),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
                 onSaved: (value) {
                   routineName = value ?? '';
                 },
               ),
+
+              const SizedBox(height: 16),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text("Days"),
+              ),
+              const SizedBox(height: 4),
               TextFormField(
-                decoration: InputDecoration(labelText: 'Days'),
+                decoration: InputDecoration(
+                  labelText: 'Days',
+                  floatingLabelBehavior: FloatingLabelBehavior.never,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.black),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),),
                 onSaved: (value) {
                   days = value ?? '';
                 },
               ),
+              const SizedBox(height: 16),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text("Gear"),
+              ),
+              const SizedBox(height: 4),
               TextFormField(
-                decoration: InputDecoration(labelText: 'Equipment'),
+                decoration: InputDecoration(
+                    labelText: 'Equipment',
+                  floatingLabelBehavior: FloatingLabelBehavior.never,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.black),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
                 onSaved: (value) {
                   equipment = value ?? '';
                 },
               ),
+              const SizedBox(height: 16),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text("Workouts"),
+              ),
+              const SizedBox(height: 4),
               Column(
-                children: workouts.asMap().map((index, workout) {
-                  return MapEntry(
-                    index,
+                children: workouts.asMap().entries.expand((entry) {
+                  int index = entry.key;
+                  String workout = entry.value;
+
+                  return [
                     Row(
                       children: [
                         Expanded(
                           child: TextFormField(
                             initialValue: workout,
-                            decoration: InputDecoration(labelText: 'Workout'),
+                            decoration: InputDecoration(
+                              labelText: 'Workout',
+                              floatingLabelBehavior: FloatingLabelBehavior.never,
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderSide: const BorderSide(color: Colors.black),
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                            ),
                             onChanged: (value) {
                               workouts[index] = value;
                             },
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete),
+                          icon: const Icon(Icons.delete),
                           onPressed: () => deleteWorkout(index),
                         ),
                       ],
                     ),
-                  );
-                }).values.toList(),
+                    if (index < workouts.length - 1) const SizedBox(height: 8), // Add spacing
+                  ];
+                }).toList(),
               ),
+
+              const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: addWorkout,
-                child: Text('Add Workout'),
+                child: const Text('Add Workout'),
               ),
               ElevatedButton(
                 onPressed: saveRoutine,
-                child: Text('Save Routine'),
+                child: const Text('Save Routine'),
               ),
             ],
           ),

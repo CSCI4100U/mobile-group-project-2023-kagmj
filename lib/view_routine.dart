@@ -5,37 +5,40 @@ import 'package:final_project/routine.dart'; // Import Routine model
 class RoutineDetailsScreen extends StatelessWidget {
   final String routineId;
 
-  RoutineDetailsScreen({Key? key, required this.routineId}) : super(key: key);
+  const RoutineDetailsScreen({super.key, required this.routineId});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Routine Details'),
+        title: const Text('Routine Details'),
+        centerTitle: true,
       ),
       body: FutureBuilder<Routine>(
-        future: DatabaseHelper().getRoutineById(int.parse(routineId)), // Fetch routine
+        future: DatabaseHelper().getRoutineById(int.parse(routineId)),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           if (!snapshot.hasData) {
-            return Center(child: Text('Routine not found'));
+            return const Center(child: Text('Routine not found'));
           }
           Routine routine = snapshot.data!;
 
           return Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('Name: ${routine.name}', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                Text(routine.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 Text('Days: ${routine.days}'),
                 Text('Equipment: ${routine.equipment}'),
-                Text('Workouts: ${routine.workouts.join(", ")}'),
+                const SizedBox(height: 10),
+                const Text('Workouts:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ...routine.workouts.map((workout) => Text(workout, style: const TextStyle(fontSize: 20))),
               ],
             ),
           );
@@ -44,3 +47,5 @@ class RoutineDetailsScreen extends StatelessWidget {
     );
   }
 }
+
+

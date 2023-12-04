@@ -154,7 +154,6 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -241,6 +240,8 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
               ),
 
             const SizedBox(height: 16),
+            const Text("Routine"),
+            const SizedBox(height: 4),
             DropdownButtonFormField<int>(
               value: selectedRoutine,
               onChanged: (int? newValue) {
@@ -256,6 +257,13 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
               }).toList(),
               decoration: InputDecoration(
                 labelText: 'Select Routine',
+                floatingLabelBehavior: FloatingLabelBehavior.never,
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
               ),
             ),
 
