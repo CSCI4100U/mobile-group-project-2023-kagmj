@@ -15,7 +15,6 @@ class CreateLogScreen extends StatefulWidget {
 class _CreateLogScreenState extends State<CreateLogScreen> {
   // Variables and Controller
   final TextEditingController _logTitleController = TextEditingController();
-  final TextEditingController _logRoutineController = TextEditingController();
   final TextEditingController _logDateController = TextEditingController();
   final TextEditingController _logTimeController = TextEditingController();
   final TextEditingController _logDescriptionController = TextEditingController();
@@ -25,7 +24,6 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
   TimeOfDay _selectedTime = TimeOfDay.now();
   final DateFormat _dateFormat = DateFormat('MMMM dd, yyyy');
   final DateFormat _timeFormat = DateFormat('h:mm a');
-  final bool _isDropdownOpened = false;
   int _selectedHours = 0;
   int _selectedMinutes = 0;
   int _selectedSeconds = 0;
@@ -57,7 +55,6 @@ class _CreateLogScreenState extends State<CreateLogScreen> {
       ),
     );
   }
-
 
   @override
   void initState() {

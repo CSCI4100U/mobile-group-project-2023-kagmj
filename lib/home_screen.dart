@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'create_routine.dart';
 import 'create_log.dart';
 import 'create_meals.dart';
+import 'list_routines.dart';
 import 'profile.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -181,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _buildHomeScreen(),
       const Scaffold(body: CreateMealScreen()),
       const Scaffold(body: CreateLogScreen()),
-      const Scaffold(body: CreateRoutinePage()),
+      const Scaffold(body: ListRoutinesScreen()),
       const Scaffold(body: ProfileScreen()),
     ];
   }

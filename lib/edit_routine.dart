@@ -1,25 +1,34 @@
-// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
 import 'package:flutter/material.dart';
 import 'log_database.dart';
 import 'routine.dart';
 
-class CreateRoutinePage extends StatefulWidget {
-  final Function onRoutineCreated;
-  const CreateRoutinePage({super.key, required this.onRoutineCreated});
+class EditRoutinePage extends StatefulWidget {
+  final Routine routine;
+  const EditRoutinePage({super.key, required this.routine});
 
   @override
-  _CreateRoutinePageState createState() => _CreateRoutinePageState();
+  _EditRoutinePageState createState() => _EditRoutinePageState();
 }
 
-class _CreateRoutinePageState extends State<CreateRoutinePage> {
+class _EditRoutinePageState extends State<EditRoutinePage> {
   final _formKey = GlobalKey<FormState>();
-  String routineName = '';
-  String days = '';
-  String equipment = '';
-  List<String> workouts = [''];
+  late String routineName;
+  late String days;
+  late String equipment;
+  late List<String> workouts;
 
   // Create an instance of DatabaseHelper
   final DatabaseHelper _databaseHelper = DatabaseHelper();
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize form fields with routine data
+    routineName = widget.routine.name;
+    days = widget.routine.days;
+    equipment = widget.routine.equipment;
+    workouts = widget.routine.workouts;
+  }
 
   void addWorkout() {
     setState(() {
@@ -37,26 +46,19 @@ class _CreateRoutinePageState extends State<CreateRoutinePage> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      // Create a Routine object
-      final Routine newRoutine = Routine(
+      // Update routine object
+      Routine updatedRoutine = Routine(
+        id: widget.routine.id,
         name: routineName,
         days: days,
         equipment: equipment,
         workouts: workouts,
       );
 
-      // Save the routine in the database
-      await _databaseHelper.insertRoutine(newRoutine);
+      // Update the routine in the database
+      await _databaseHelper.updateRoutine(updatedRoutine);
 
-      // Show a SnackBar upon successful save
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Routine successfully saved!'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-
-      widget.onRoutineCreated();
+      // Navigate back or show a confirmation message
       Navigator.of(context).pop();
     }
   }
@@ -65,8 +67,7 @@ class _CreateRoutinePageState extends State<CreateRoutinePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Routine'),
-        centerTitle: true,
+        title: Text('Edit Routine'),
       ),
       body: Form(
         key: _formKey,
@@ -80,8 +81,9 @@ class _CreateRoutinePageState extends State<CreateRoutinePage> {
               ),
               const SizedBox(height: 4),
               TextFormField(
+                initialValue: routineName,
                 decoration: InputDecoration(
-                    labelText: 'Routine Name',
+                  labelText: 'Routine Name',
                   floatingLabelBehavior: FloatingLabelBehavior.never,
                   filled: true,
                   fillColor: Colors.white,
@@ -102,6 +104,7 @@ class _CreateRoutinePageState extends State<CreateRoutinePage> {
               ),
               const SizedBox(height: 4),
               TextFormField(
+                initialValue: days,
                 decoration: InputDecoration(
                   labelText: 'Days',
                   floatingLabelBehavior: FloatingLabelBehavior.never,
@@ -122,8 +125,9 @@ class _CreateRoutinePageState extends State<CreateRoutinePage> {
               ),
               const SizedBox(height: 4),
               TextFormField(
+                initialValue: equipment,
                 decoration: InputDecoration(
-                    labelText: 'Equipment',
+                  labelText: 'Equipment',
                   floatingLabelBehavior: FloatingLabelBehavior.never,
                   filled: true,
                   fillColor: Colors.white,
@@ -146,7 +150,6 @@ class _CreateRoutinePageState extends State<CreateRoutinePage> {
                 children: workouts.asMap().entries.expand((entry) {
                   int index = entry.key;
                   String workout = entry.value;
-
                   return [
                     Row(
                       children: [

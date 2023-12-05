@@ -75,9 +75,29 @@ class DatabaseHelper {
         name: maps[i]['name'],
         days: maps[i]['days'],
         equipment: maps[i]['equipment'],
-        workouts: maps[i]['workouts'].split(', '), // Split the string back into a list
+        workouts: maps[i]['workouts'].split(', '),
       );
     });
+  }
+
+  Future<void> deleteRoutine(int id) async {
+    final db = await database;
+    await db.delete(
+      'routines',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> updateRoutine(Routine routine) async {
+    final db = await database;
+
+    await db.update(
+      'routines',
+      routine.toMap(),
+      where: 'id = ?',
+      whereArgs: [routine.id],
+    );
   }
 
   void _onUpgrade(Database db, int oldVersion, int newVersion) async {
