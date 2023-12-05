@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:final_project/log_database.dart';
-
 import 'home_screen.dart';
 
 class CreateMealScreen extends StatefulWidget {

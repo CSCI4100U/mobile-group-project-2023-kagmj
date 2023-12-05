@@ -7,6 +7,7 @@ import 'package:final_project/log_database.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'create_routine.dart';
+import 'create_water.dart';
 import 'create_log.dart';
 import 'create_meals.dart';
 import 'list_routines.dart';
@@ -182,6 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _buildHomeScreen(),
       const Scaffold(body: CreateMealScreen()),
       const Scaffold(body: CreateLogScreen()),
+      const Scaffold(body: CreateWaterScreen()),
       const Scaffold(body: ListRoutinesScreen()),
       const Scaffold(body: ProfileScreen()),
     ];
@@ -251,6 +253,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.fitness_center),
             label: 'Log Workout',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.water_drop_outlined),
+            label: 'Log Water',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.access_time_rounded),

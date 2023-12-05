@@ -144,18 +144,22 @@ class DatabaseHelper {
     Map<int, int> totalWorkoutsPerLog = {};
 
     for (var log in logs) {
-      int routineId = log['routineId'];
-      int workoutCount = await _getWorkoutCountForRoutine(db, routineId);
+      int? routineId = log['routineId']; // Use int? to handle potential null values
 
-      if (totalWorkoutsPerLog.containsKey(routineId)) {
-        totalWorkoutsPerLog[routineId] = (totalWorkoutsPerLog[routineId] ?? 0) + workoutCount;
-      } else {
-        totalWorkoutsPerLog[routineId] = workoutCount;
+      if (routineId != null) {
+        int workoutCount = await _getWorkoutCountForRoutine(db, routineId);
+
+        if (totalWorkoutsPerLog.containsKey(routineId)) {
+          totalWorkoutsPerLog[routineId] = (totalWorkoutsPerLog[routineId] ?? 0) + workoutCount;
+        } else {
+          totalWorkoutsPerLog[routineId] = workoutCount;
+        }
       }
     }
 
     return totalWorkoutsPerLog;
   }
+
 
 
   Future<int> _getWorkoutCountForRoutine(Database db, int routineId) async {
