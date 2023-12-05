@@ -17,6 +17,7 @@ class _CreateRoutinePageState extends State<CreateRoutinePage> {
   String days = '';
   String equipment = '';
   List<String> workouts = [''];
+  int workoutCount = 0;
 
   // Create an instance of DatabaseHelper
   final DatabaseHelper _databaseHelper = DatabaseHelper();
@@ -32,17 +33,18 @@ class _CreateRoutinePageState extends State<CreateRoutinePage> {
       workouts.removeAt(index);
     });
   }
-
   Future<void> saveRoutine() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
+      workoutCount = workouts.length;
       // Create a Routine object
       final Routine newRoutine = Routine(
         name: routineName,
         days: days,
         equipment: equipment,
         workouts: workouts,
+        workoutCount: workoutCount,
       );
 
       // Save the routine in the database

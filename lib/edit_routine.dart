@@ -16,6 +16,7 @@ class _EditRoutinePageState extends State<EditRoutinePage> {
   late String days;
   late String equipment;
   late List<String> workouts;
+  late int workoutCount;
 
   // Create an instance of DatabaseHelper
   final DatabaseHelper _databaseHelper = DatabaseHelper();
@@ -28,6 +29,7 @@ class _EditRoutinePageState extends State<EditRoutinePage> {
     days = widget.routine.days;
     equipment = widget.routine.equipment;
     workouts = widget.routine.workouts;
+    workoutCount= widget.routine.workoutCount;
   }
 
   void addWorkout() {
@@ -53,6 +55,7 @@ class _EditRoutinePageState extends State<EditRoutinePage> {
         days: days,
         equipment: equipment,
         workouts: workouts,
+        workoutCount: workoutCount,
       );
 
       // Update the routine in the database

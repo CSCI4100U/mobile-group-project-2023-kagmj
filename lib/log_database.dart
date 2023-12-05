@@ -23,7 +23,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'your_database.db');
     return await openDatabase(
       path,
-      version: 5,
+      version: 10,
       onCreate: (Database db, int version) async {
         await db.execute('''
         CREATE TABLE $tableName (
@@ -48,7 +48,8 @@ class DatabaseHelper {
           name TEXT,
           days TEXT,
           equipment TEXT,
-          workouts TEXT
+          workouts TEXT,
+          workoutCount INTEGER
         )
       ''');
       },
@@ -76,6 +77,7 @@ class DatabaseHelper {
         days: maps[i]['days'],
         equipment: maps[i]['equipment'],
         workouts: maps[i]['workouts'].split(', '),
+        workoutCount: maps[i]['workoutCount'],
       );
     });
   }
@@ -101,9 +103,9 @@ class DatabaseHelper {
   }
 
   void _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 5) {
+    if (oldVersion < 10) {
       await db.execute('''
-      ALTER TABLE $tableName ADD COLUMN routineId INTEGER;
+      ALTER TABLE routines ADD COLUMN workoutCount INTEGER;
     ''');
     }
   }
@@ -123,6 +125,7 @@ class DatabaseHelper {
         days: maps[0]['days'],
         equipment: maps[0]['equipment'],
         workouts: maps[0]['workouts'].split(', '),
+        workoutCount: maps[0]['workoutCount'],
       );
     } else {
       throw Exception('Routine not found');
@@ -134,7 +137,40 @@ class DatabaseHelper {
     Database db = await database;
     return await db.insert(tableName, log);
   }
+  Future<Map<int, int>> getTotalWorkoutsPerLog() async {
+    final db = await database;
+    final List<Map<String, dynamic>> logs = await db.query('logs');
 
+    Map<int, int> totalWorkoutsPerLog = {};
+
+    for (var log in logs) {
+      int routineId = log['routineId'];
+      int workoutCount = await _getWorkoutCountForRoutine(db, routineId);
+
+      if (totalWorkoutsPerLog.containsKey(routineId)) {
+        totalWorkoutsPerLog[routineId] = (totalWorkoutsPerLog[routineId] ?? 0) + workoutCount;
+      } else {
+        totalWorkoutsPerLog[routineId] = workoutCount;
+      }
+    }
+
+    return totalWorkoutsPerLog;
+  }
+
+
+  Future<int> _getWorkoutCountForRoutine(Database db, int routineId) async {
+    final List<Map<String, dynamic>> routines = await db.query(
+      'routines',
+      where: 'id = ?',
+      whereArgs: [routineId],
+    );
+
+    if (routines.isNotEmpty) {
+      return routines[0]['workoutCount'] ?? 0;
+    } else {
+      return 0;
+    }
+  }
   Future<void> deleteLog(int id) async {
     final db = await database;
     await db.delete(

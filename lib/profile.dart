@@ -1,5 +1,6 @@
 // ignore_for_file: library_private_types_in_public_api
 
+import 'log_database.dart';
 import 'settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -7,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'edit_profile.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({Key? key}) : super(key: key);
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -17,13 +18,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String name = '';
   String country = '';
   String avatarUrl = '';
+  int totalWorkouts = 0; // New variable to store the total workout count
 
   @override
   void initState() {
     super.initState();
     _loadProfileData();
+    _loadTotalWorkouts();
   }
 
+  Future<void> _loadTotalWorkouts() async {
+    try {
+      // Get total workouts using DatabaseHelper function
+      Map<int, int> workoutsPerLog = await DatabaseHelper().getTotalWorkoutsPerLog();
+
+      // Calculate total workouts from the map values
+      int total = workoutsPerLog.values.fold(0, (sum, count) => sum + count);
+
+      setState(() {
+        totalWorkouts = total;
+      });
+    } catch (e) {
+      print('Error fetching total workouts: $e');
+    }
+  }
   // Load Profile Data - Loads information from Firebase for the current user
   Future<void> _loadProfileData() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -90,6 +108,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Text(
                         country,
                         style: const TextStyle(fontSize: 18, color: Colors.grey),
+                      ),const SizedBox(height: 20),
+                      Text(
+                        'Total Workouts: $totalWorkouts',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
