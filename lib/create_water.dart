@@ -20,17 +20,41 @@ class _CreateWaterScreenState extends State<CreateWaterScreen> {
   }
 
   void _submitWaterIntake() async {
+    // Check if the water intake value is not empty
+    if (_waterIntakeController.text.isEmpty) {
+      // Show an error message or handle the case where the input is empty
+      return;
+    }
+
+    // Retrieve existing water intake value or set a default value
+    List<Map<String, dynamic>>? logs = await DatabaseHelper().getLogs();
+    Map<String, dynamic> existingWaterIntakeLog =
+        logs?.firstWhere((log) => log['type'] == 'water', orElse: () => {'waterIntake': '0'}) ?? {'waterIntake': '0'};
+
+    int existingWaterIntake = int.tryParse(existingWaterIntakeLog['waterIntake'].toString()) ?? 0;
+
+    // Add new water intake to the existing value
+    int newWaterIntake = int.tryParse(_waterIntakeController.text) ?? 0;
+    int totalWaterIntake = existingWaterIntake + newWaterIntake;
+
+    // Prepare the data for insertion
     final waterIntake = {
       'type': 'water',
-      'waterIntake': _waterIntakeController.text,
+      'waterIntake': totalWaterIntake.toString(),
     };
+
+    // Insert the new water intake into the database
     await DatabaseHelper().insertLog(waterIntake);
+
+    // Navigate back to the home screen
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const HomeScreen(),
       ),
     );
   }
+
+
 
   @override
   Widget build(BuildContext context) {

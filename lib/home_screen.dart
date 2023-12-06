@@ -25,6 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> _logs = [];
   String userName = '';
   String avatarUrl = '';
+  String _waterIntakeValue = 'XX ml'; // Initialize _waterIntakeValue here
+  int _totalWorkouts = 0;
 
   @override
   void initState() {
@@ -35,8 +37,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchLogs() async {
     _logs = await DatabaseHelper().getLogs(); // Fetch logs from the database
-    setState(() {});
+
+    // Fetch water intake specifically
+    Map<String, dynamic>? waterIntakeLog = _logs.firstWhere((log) => log['type'] == 'water', orElse: () => {'waterIntake': null});
+
+    // Extract and update the water intake value
+    String waterIntakeValue = waterIntakeLog['waterIntake'] != null ? '${waterIntakeLog['waterIntake']} ml' : 'XX ml';
+
+    // Fetch workout logs
+    List<Map<String, dynamic>> workoutLogs = _logs.where((log) => log['type'] == 'workout').toList();
+    int totalWorkouts = workoutLogs.length;
+
+    setState(() {
+      _waterIntakeValue = waterIntakeValue;
+      _totalWorkouts = totalWorkouts;
+    });
   }
+
+
+
+
 
   void _deleteLog(int id) async {
     await DatabaseHelper().deleteLog(id); // Delete from database
@@ -62,9 +82,63 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+
+
+
   Widget _buildHomeScreen() {
     return RefreshIndicator(
       onRefresh: _fetchLogs,
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+      // Daily Goals Tracker Card
+      Card(
+      margin: const EdgeInsets.all(8.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Text(
+                'Daily Activity',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            SizedBox(height: 16),
+            // 2x2 layout for the goal details
+            Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center, // Center the Row
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _buildGoalDetail('Calories Burned', 'XXXX', Icons.local_fire_department),
+                        _buildSpacer(),
+                        _buildGoalDetail('Number of Workouts', '$_totalWorkouts', Icons.fitness_center),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _buildGoalDetail('Water Intake', _waterIntakeValue, Icons.local_drink),
+                        _buildSpacer(),
+                        _buildGoalDetail('Calories Intake', 'XXXX', Icons.fastfood),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+    Expanded(
       child: ListView.builder(
         itemCount: _logs.length,
         itemBuilder: (BuildContext context, int index) {
@@ -74,7 +148,11 @@ class _HomeScreenState extends State<HomeScreen> {
             displayTitle = log['logTitle'] ?? 'No Title';
           } else if (log['type'] == 'workout') {
             displayTitle = "${log['logTitle'] ?? 'No Title'} - ${log['workoutType'] ?? 'No Workout Type'}";
-          } else {
+          }
+          else if (log['type'] == 'water') {
+            return Container();
+          }
+          else {
             displayTitle = log['logTitle'] ?? 'No Title';
           }
           return Card(
@@ -122,8 +200,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         ElevatedButton(
                           onPressed: () {
                             // Convert routineId to String if RoutineDetailsScreen expects a String
-                            String routineIdAsString = log['routineId'].toString();
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => RoutineDetailsScreen(routineId: routineIdAsString)));
+                            dynamic routineId = log['routineId'];
+                            if (routineId != null) {
+                              String routineIdAsString = '$routineId';
+                              if (routineIdAsString.isNotEmpty && int.tryParse(routineIdAsString) != null) {
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => RoutineDetailsScreen(routineId: routineIdAsString)));
+                              } else {
+                                // Handle the case where routineId is not a valid number
+                                print('Invalid routineId: $routineIdAsString');
+                              }
+                            } else {
+                              // Handle the case where routineId is null
+                              print('RoutineId is null');
+                            }
                           },
                           child: Text('View Routine'),
                         ),
@@ -175,6 +264,31 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
+    )]));
+  }
+
+  Widget _buildSpacer() {
+    return SizedBox(height: 16);
+  }
+
+  Widget _buildGoalDetail(String title, String value, IconData iconData) {
+    return Row(
+      children: [
+        Icon(iconData),
+        SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(value),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
