@@ -65,6 +65,57 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHomeScreen() {
     return RefreshIndicator(
       onRefresh: _fetchLogs,
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+      // Daily Goals Tracker Card
+      Card(
+      margin: const EdgeInsets.all(8.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Text(
+                'Daily Activity',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            SizedBox(height: 16),
+            // 2x2 layout for the goal details
+            Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center, // Center the Row
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _buildGoalDetail('Calories Burned', 'XXXX', Icons.local_fire_department),
+                        _buildSpacer(),
+                        _buildGoalDetail('Number of Workouts', 'XX', Icons.fitness_center),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _buildGoalDetail('Water Intake', 'XX cups', Icons.local_drink),
+                        _buildSpacer(),
+                        _buildGoalDetail('Calories Intake', 'XXXX', Icons.fastfood),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+    Expanded(
       child: ListView.builder(
         itemCount: _logs.length,
         itemBuilder: (BuildContext context, int index) {
@@ -175,6 +226,31 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
+    )]));
+  }
+
+  Widget _buildSpacer() {
+    return SizedBox(height: 16);
+  }
+
+  Widget _buildGoalDetail(String title, String value, IconData iconData) {
+    return Row(
+      children: [
+        Icon(iconData),
+        SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(value),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
