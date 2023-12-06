@@ -45,13 +45,20 @@ class _HomeScreenState extends State<HomeScreen> {
     String waterIntakeValue = waterIntakeLog['waterIntake'] != null ? '${waterIntakeLog['waterIntake']} ml' : 'XX ml';
 
     // Fetch workout logs
-    List<Map<String, dynamic>> workoutLogs = _logs.where((log) => log['type'] == 'workout').toList();
-    int totalWorkouts = workoutLogs.length;
+    try {
+      // Get total workouts using DatabaseHelper function
+      Map<int, int> workoutsPerLog = await DatabaseHelper().getTotalWorkoutsPerLog();
 
-    setState(() {
-      _waterIntakeValue = waterIntakeValue;
-      _totalWorkouts = totalWorkouts;
-    });
+      // Calculate total workouts from the map values
+      int total = workoutsPerLog.values.fold(0, (sum, count) => sum + count);
+
+      setState(() {
+        _waterIntakeValue=waterIntakeValue;
+        _totalWorkouts = total;
+      });
+    } catch (e) {
+      print('Error fetching total workouts: $e');
+    }
   }
 
 

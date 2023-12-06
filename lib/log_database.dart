@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 class DatabaseHelper {
   static Database? _database;
   static const String tableName = 'logs';
+  static const String goalsTableName = 'weeklyGoals';
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -23,7 +24,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'your_database.db');
     return await openDatabase(
       path,
-      version: 11,
+      version: 12,
       onCreate: (Database db, int version) async {
         await db.execute('''
         CREATE TABLE $tableName (
@@ -53,11 +54,47 @@ class DatabaseHelper {
           workoutCount INTEGER
         )
       ''');
+        await db.execute('''
+        CREATE TABLE $goalsTableName (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          caloriesBurnedGoal INTEGER,
+          waterIntakeGoal INTEGER,
+          workoutsCompletedGoal INTEGER,
+          caloriesGoal INTEGER
+        )
+      ''');
       },
       onUpgrade: _onUpgrade,
     );
   }
+  Future<void> insertWeeklyGoals(Map<String, int> goals) async {
+    final db = await database;
+    await db.insert(
+      goalsTableName,
+      goals,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+  Future<Map<String, int>> getWeeklyGoals() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(goalsTableName);
 
+    if (maps.isNotEmpty) {
+      return {
+        'caloriesBurnedGoal': maps[0]['caloriesBurnedGoal'],
+        'waterIntakeGoal': maps[0]['waterIntakeGoal'],
+        'workoutsCompletedGoal': maps[0]['workoutsCompletedGoal'],
+        'caloriesGoal': maps[0]['caloriesGoal'],
+      };
+    } else {
+      return {
+        'caloriesBurnedGoal': 0,
+        'waterIntakeGoal': 0,
+        'workoutsCompletedGoal': 0,
+        'caloriesGoal': 0,
+      };
+    }
+  }
   Future<void> insertRoutine(Routine routine) async {
     final db = await database;
     await db.insert(
@@ -104,12 +141,25 @@ class DatabaseHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 11) {
+      await db.execute('''
+      CREATE TABLE $goalsTableName (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        caloriesBurnedGoal INTEGER,
+        waterIntakeGoal INTEGER,
+        workoutsCompletedGoal INTEGER,
+        caloriesGoal INTEGER
+      )
+    ''');
+    }
+
     if (oldVersion < 10) {
       await db.execute('''
       ALTER TABLE $tableName ADD COLUMN waterIntake TEXT;
     ''');
     }
   }
+
 
 
   Future<Routine> getRoutineById(int routineId) async {
@@ -163,6 +213,15 @@ class DatabaseHelper {
   }
 
 
+  Future<Map<String, dynamic>> _getRoutine(Database db, int routineId) async {
+    final routines = await db.query(
+      'routines',
+      where: 'id = ?',
+      whereArgs: [routineId],
+    );
+
+    return routines.isNotEmpty ? routines.first : {};
+  }
 
   Future<int> _getWorkoutCountForRoutine(Database db, int routineId) async {
     final List<Map<String, dynamic>> routines = await db.query(

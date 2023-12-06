@@ -139,6 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 MyMealsCard(), // MyMealsCard
               ],
             ),
+            WeeklyGoalProgress(),
           ],
         ),
       ),
@@ -220,3 +221,146 @@ class _StatisticsCardState extends State<StatisticsCard> {
     }
   }
 }
+class GoalProgressIndicator extends StatelessWidget {
+  final String goalName;
+  final int currentValue;
+  final int goalValue;
+
+  const GoalProgressIndicator({
+    Key? key,
+    required this.goalName,
+    required this.currentValue,
+    required this.goalValue,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // Ensuring goalValue is not zero or null
+    int adjustedGoalValue = goalValue != 0 ? goalValue : 1;
+
+    double progress = currentValue / adjustedGoalValue;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          goalName,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(
+          height: 20,
+          child: CircularProgressIndicator(
+            value: progress,
+            backgroundColor: Colors.grey[300],
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+          ),
+        ),
+        Text(
+          'Current: $currentValue',
+          style: const TextStyle(fontSize: 14),
+        ),
+        Text(
+          'Goal: $goalValue',
+          style: const TextStyle(fontSize: 14),
+        ),
+      ],
+    );
+  }
+}
+
+class WeeklyGoalProgress extends StatefulWidget {
+  @override
+  _WeeklyGoalProgressState createState() => _WeeklyGoalProgressState();
+}
+
+class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
+  Map<String, int> weeklyGoals = {
+    'caloriesBurnedGoal': 0,
+    'waterIntakeGoal': 0,
+    'workoutsCompletedGoal': 0,
+    'caloriesGoal': 0,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWeeklyGoals();
+  }
+
+  Future<void> _loadWeeklyGoals() async {
+    try {
+      Map<String, int> goals = await DatabaseHelper().getWeeklyGoals();
+      setState(() {
+        weeklyGoals = goals;
+      });
+    } catch (e) {
+      print('Error fetching weekly goals: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.centerLeft,
+      child: Card(
+        elevation: 4,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const Text(
+                'Weekly Goals Progress',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10), // Add bottom padding for space
+                child: GoalProgressIndicator(
+                  goalName: 'Calories Burned',
+                  currentValue: 0,
+                  goalValue: weeklyGoals['caloriesBurnedGoal'] != 0
+                      ? weeklyGoals['caloriesBurnedGoal']!
+                      : 1, // Ensuring goal value isn't zero
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10), // Add bottom padding for space
+                child: GoalProgressIndicator(
+                  goalName: 'Water Intake',
+                  currentValue: 0,
+                  goalValue: weeklyGoals['waterIntakeGoal'] != 0
+                      ? weeklyGoals['waterIntakeGoal']!
+                      : 1, // Ensuring goal value isn't zero
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10), // Add bottom padding for space
+                child: GoalProgressIndicator(
+                  goalName: 'Workouts Completed',
+                  currentValue: 0,
+                  goalValue: weeklyGoals['workoutsCompletedGoal'] != 0
+                      ? weeklyGoals['workoutsCompletedGoal']!
+                      : 1, // Ensuring goal value isn't zero
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10), // Add bottom padding for space
+                child: GoalProgressIndicator(
+                  goalName: 'Calories',
+                  currentValue: 0,
+                  goalValue: weeklyGoals['caloriesGoal'] != 0
+                      ? weeklyGoals['caloriesGoal']!
+                      : 1, // Ensuring goal value isn't zero
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+

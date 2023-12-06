@@ -1,17 +1,5 @@
 import 'package:flutter/material.dart';
-class GoalsModel {
-  final int caloriesBurnedGoal;
-  final int waterIntakeGoal;
-  final int workoutsCompletedGoal;
-  final int caloriesGoal;
-
-  GoalsModel({
-    required this.caloriesBurnedGoal,
-    required this.waterIntakeGoal,
-    required this.workoutsCompletedGoal,
-    required this.caloriesGoal,
-  });
-}
+import 'log_database.dart'; // Import your DatabaseHelper
 class MyGoalsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -69,14 +57,28 @@ class _SetGoalsScreenState extends State<SetGoalsScreen> {
   int workoutsCompletedGoal = 0;
   int caloriesGoal = 0;
 
+  DatabaseHelper databaseHelper = DatabaseHelper(); // Instance of DatabaseHelper
+
+  @override
+  void initState() {
+    super.initState();
+    loadWeeklyGoalsFromDatabase();
+  }
+
+  // Function to load the last inserted weekly goals from the database
+  void loadWeeklyGoalsFromDatabase() async {
+    Map<String, int> lastGoals = await databaseHelper.getWeeklyGoals();
+
+    setState(() {
+      caloriesBurnedGoal = lastGoals['caloriesBurnedGoal'] ?? 0;
+      waterIntakeGoal = lastGoals['waterIntakeGoal'] ?? 0;
+      workoutsCompletedGoal = lastGoals['workoutsCompletedGoal'] ?? 0;
+      caloriesGoal = lastGoals['caloriesGoal'] ?? 0;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    GoalsModel goalsModel = GoalsModel(
-      caloriesBurnedGoal: 0,
-      waterIntakeGoal: 0,
-      workoutsCompletedGoal: 0,
-      caloriesGoal: 0,
-    );
     return Scaffold(
       appBar: AppBar(
         title: const Text('Set Goals'),
@@ -93,6 +95,7 @@ class _SetGoalsScreenState extends State<SetGoalsScreen> {
             const SizedBox(height: 10),
             buildGoalTextField(
               labelText: 'Calories Burned Goal',
+              initialValue: caloriesBurnedGoal.toString(),
               onChanged: (value) {
                 setState(() {
                   caloriesBurnedGoal = int.tryParse(value) ?? 0;
@@ -102,6 +105,7 @@ class _SetGoalsScreenState extends State<SetGoalsScreen> {
             const SizedBox(height: 10),
             buildGoalTextField(
               labelText: 'Water Intake Goal',
+              initialValue: waterIntakeGoal.toString(),
               onChanged: (value) {
                 setState(() {
                   waterIntakeGoal = int.tryParse(value) ?? 0;
@@ -111,6 +115,7 @@ class _SetGoalsScreenState extends State<SetGoalsScreen> {
             const SizedBox(height: 10),
             buildGoalTextField(
               labelText: 'Workouts Completed Goal',
+              initialValue: workoutsCompletedGoal.toString(),
               onChanged: (value) {
                 setState(() {
                   workoutsCompletedGoal = int.tryParse(value) ?? 0;
@@ -120,6 +125,7 @@ class _SetGoalsScreenState extends State<SetGoalsScreen> {
             const SizedBox(height: 10),
             buildGoalTextField(
               labelText: 'Calories Goal',
+              initialValue: caloriesGoal.toString(),
               onChanged: (value) {
                 setState(() {
                   caloriesGoal = int.tryParse(value) ?? 0;
@@ -129,36 +135,12 @@ class _SetGoalsScreenState extends State<SetGoalsScreen> {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                // Display the weekly goals
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: const Text('Weekly Goals'),
-                      content: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          Text('Calories Burned Goal: ${goalsModel.caloriesBurnedGoal}'),
-                          Text('Water Intake Goal: ${goalsModel.waterIntakeGoal}'),
-                          Text('Workouts Completed Goal: ${goalsModel.workoutsCompletedGoal}'),
-                          Text('Calories Goal: ${goalsModel.caloriesGoal}'),
-                        ],
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            // Save the goals and pop the screen
-                            Navigator.of(context).pop(goalsModel);
-                          },
-                          child: const Text('Save Goals'),
-                        ),
-                      ],
-                    );
-                  },
-                );
+                // Store the weekly goals into the database
+                storeWeeklyGoals();
+                // Navigate back to the profile screen
+                Navigator.pop(context);
               },
-              child: const Text('Display Goals'),
+              child: const Text('Save Goals'),
             ),
           ],
         ),
@@ -168,6 +150,7 @@ class _SetGoalsScreenState extends State<SetGoalsScreen> {
 
   Widget buildGoalTextField({
     required String labelText,
+    required String initialValue,
     required ValueChanged<String> onChanged,
   }) {
     return TextField(
@@ -177,6 +160,26 @@ class _SetGoalsScreenState extends State<SetGoalsScreen> {
       ),
       keyboardType: TextInputType.number,
       onChanged: onChanged,
+      controller: TextEditingController(text: initialValue), // Set initial value
+    );
+  }
+
+
+  // Function to store the weekly goals into the database
+  void storeWeeklyGoals() async {
+    Map<String, int> goals = {
+      'caloriesBurnedGoal': caloriesBurnedGoal,
+      'waterIntakeGoal': waterIntakeGoal,
+      'workoutsCompletedGoal': workoutsCompletedGoal,
+      'caloriesGoal': caloriesGoal,
+    };
+
+    await databaseHelper.insertWeeklyGoals(goals);
+    // You might want to add a snackbar or other UI feedback to indicate success
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Weekly goals saved to the database'),
+      ),
     );
   }
 }
