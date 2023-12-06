@@ -26,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String userName = '';
   String avatarUrl = '';
   String _waterIntakeValue = 'XX ml'; // Initialize _waterIntakeValue here
+  int _totalWorkouts = 0;
 
   @override
   void initState() {
@@ -35,21 +36,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchLogs() async {
-    _logs = (await DatabaseHelper().getLogs())!; // Assume the result is non-null
+    _logs = await DatabaseHelper().getLogs(); // Fetch logs from the database
 
     // Fetch water intake specifically
-    Map<String, dynamic> waterIntakeLog = _logs.firstWhere(
-          (log) => log['type'] == 'water',
-      orElse: () => Map<String, dynamic>(),
-    );
+    Map<String, dynamic>? waterIntakeLog = _logs.firstWhere((log) => log['type'] == 'water', orElse: () => {'waterIntake': null});
 
     // Extract and update the water intake value
-    String waterIntakeValue =
-    waterIntakeLog.isNotEmpty ? '${waterIntakeLog['waterIntake']} ml' : 'XX ml';
+    String waterIntakeValue = waterIntakeLog['waterIntake'] != null ? '${waterIntakeLog['waterIntake']} ml' : 'XX ml';
+
+    // Fetch workout logs
+    List<Map<String, dynamic>> workoutLogs = _logs.where((log) => log['type'] == 'workout').toList();
+    int totalWorkouts = workoutLogs.length;
+
     setState(() {
       _waterIntakeValue = waterIntakeValue;
+      _totalWorkouts = totalWorkouts;
     });
   }
+
+
 
 
 
@@ -113,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         _buildGoalDetail('Calories Burned', 'XXXX', Icons.local_fire_department),
                         _buildSpacer(),
-                        _buildGoalDetail('Number of Workouts', 'XX', Icons.fitness_center),
+                        _buildGoalDetail('Number of Workouts', '$_totalWorkouts', Icons.fitness_center),
                       ],
                     ),
                   ),
@@ -195,8 +200,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         ElevatedButton(
                           onPressed: () {
                             // Convert routineId to String if RoutineDetailsScreen expects a String
-                            String routineIdAsString = log['routineId'].toString();
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => RoutineDetailsScreen(routineId: routineIdAsString)));
+                            dynamic routineId = log['routineId'];
+                            if (routineId != null) {
+                              String routineIdAsString = '$routineId';
+                              if (routineIdAsString.isNotEmpty && int.tryParse(routineIdAsString) != null) {
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => RoutineDetailsScreen(routineId: routineIdAsString)));
+                              } else {
+                                // Handle the case where routineId is not a valid number
+                                print('Invalid routineId: $routineIdAsString');
+                              }
+                            } else {
+                              // Handle the case where routineId is null
+                              print('RoutineId is null');
+                            }
                           },
                           child: Text('View Routine'),
                         ),
