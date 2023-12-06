@@ -85,6 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
+    child: SingleChildScrollView(
         child: Column(
           children: <Widget>[
             Row(
@@ -142,6 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             WeeklyGoalProgress(),
           ],
         ),
+    ),
       ),
     );
   }
@@ -306,6 +308,7 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
         elevation: 4,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
+    child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -356,6 +359,7 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
               ),
             ],
           ),
+    ),
         ),
       ),
     );
