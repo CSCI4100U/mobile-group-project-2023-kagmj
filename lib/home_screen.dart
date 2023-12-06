@@ -25,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> _logs = [];
   String userName = '';
   String avatarUrl = '';
+  String _waterIntakeValue = 'XX ml'; // Initialize _waterIntakeValue here
 
   @override
   void initState() {
@@ -34,9 +35,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchLogs() async {
-    _logs = await DatabaseHelper().getLogs(); // Fetch logs from the database
-    setState(() {});
+    _logs = (await DatabaseHelper().getLogs())!; // Assume the result is non-null
+
+    // Fetch water intake specifically
+    Map<String, dynamic> waterIntakeLog = _logs.firstWhere(
+          (log) => log['type'] == 'water',
+      orElse: () => Map<String, dynamic>(),
+    );
+
+    // Extract and update the water intake value
+    String waterIntakeValue =
+    waterIntakeLog.isNotEmpty ? '${waterIntakeLog['waterIntake']} ml' : 'XX ml';
+    setState(() {
+      _waterIntakeValue = waterIntakeValue;
+    });
   }
+
+
 
   void _deleteLog(int id) async {
     await DatabaseHelper().deleteLog(id); // Delete from database
@@ -61,6 +76,9 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
   }
+
+
+
 
   Widget _buildHomeScreen() {
     return RefreshIndicator(
@@ -102,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: Column(
                       children: [
-                        _buildGoalDetail('Water Intake', 'XX cups', Icons.local_drink),
+                        _buildGoalDetail('Water Intake', _waterIntakeValue, Icons.local_drink),
                         _buildSpacer(),
                         _buildGoalDetail('Calories Intake', 'XXXX', Icons.fastfood),
                       ],
@@ -125,7 +143,11 @@ class _HomeScreenState extends State<HomeScreen> {
             displayTitle = log['logTitle'] ?? 'No Title';
           } else if (log['type'] == 'workout') {
             displayTitle = "${log['logTitle'] ?? 'No Title'} - ${log['workoutType'] ?? 'No Workout Type'}";
-          } else {
+          }
+          else if (log['type'] == 'water') {
+            return Container();
+          }
+          else {
             displayTitle = log['logTitle'] ?? 'No Title';
           }
           return Card(

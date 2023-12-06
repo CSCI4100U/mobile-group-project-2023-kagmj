@@ -23,7 +23,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'your_database.db');
     return await openDatabase(
       path,
-      version: 10,
+      version: 11,
       onCreate: (Database db, int version) async {
         await db.execute('''
         CREATE TABLE $tableName (
@@ -39,6 +39,7 @@ class DatabaseHelper {
           foodItems TEXT,
           recipes TEXT,
           routineId INTEGER,
+          waterIntake TEXT,
           FOREIGN KEY (routineId) REFERENCES routines(id)
         )
       ''');
@@ -102,13 +103,14 @@ class DatabaseHelper {
     );
   }
 
-  void _onUpgrade(Database db, int oldVersion, int newVersion) async {
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 10) {
       await db.execute('''
-      ALTER TABLE routines ADD COLUMN workoutCount INTEGER;
+      ALTER TABLE $tableName ADD COLUMN waterIntake TEXT;
     ''');
     }
   }
+
 
   Future<Routine> getRoutineById(int routineId) async {
     final db = await database;
