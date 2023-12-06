@@ -110,15 +110,16 @@ class DatabaseHelper {
 
     return List.generate(maps.length, (i) {
       return Routine(
-        id: maps[i]['id'],
+        id: maps[i]['id'] ?? 0,
         name: maps[i]['name'],
         days: maps[i]['days'],
         equipment: maps[i]['equipment'],
         workouts: maps[i]['workouts'].split(', '),
-        workoutCount: maps[i]['workoutCount'],
+        workoutCount: maps[i]['workoutCount'] ?? 0,
       );
     });
   }
+
 
   Future<void> deleteRoutine(int id) async {
     final db = await database;
