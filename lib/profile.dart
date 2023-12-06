@@ -1,5 +1,8 @@
 // ignore_for_file: library_private_types_in_public_api
 
+import 'package:final_project/profile_my_meal.dart';
+import 'package:final_project/view_routine.dart';
+
 import 'log_database.dart';
 import 'settings_screen.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'edit_profile.dart';
 import 'profile_goal.dart';
+import 'profile_my_workout.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -164,9 +168,9 @@ class _StatisticsCardState extends State<StatisticsCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const <Widget>[
+              children: <Widget>[
                 Icon(Icons.directions_run),
                 Text(
                   'Total Workouts',
@@ -216,131 +220,3 @@ class _StatisticsCardState extends State<StatisticsCard> {
     }
   }
 }
-class MyWorkoutsCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
-
-    return SizedBox(
-      width: screenWidth / 3.5,
-      child: Card(
-
-        elevation: 4,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  IconButton(
-                    icon: const Icon(Icons.fitness_center),
-                    iconSize: 40, // Set the size of the icon
-                    onPressed: () {
-                      // Navigate to the SetGoalsScreen when the icon is pressed
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => SetWorkoutScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const Text(
-                'My Workouts',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 6),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-class SetWorkoutScreen extends StatefulWidget {
-  @override
-  _SetWorkoutScreenState createState() => _SetWorkoutScreenState();
-}
-
-class _SetWorkoutScreenState extends State<SetWorkoutScreen> {
-  List<Map<String, dynamic>> _workoutLogs = []; // Replace this with your workout log data
-
-  Future<void> _fetchLogs() async {
-    _workoutLogs = await DatabaseHelper().getLogs(); // Fetch logs from the database
-    setState(() {});
-  }
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Set Workouts'),
-      ),
-      body: RefreshIndicator(
-        onRefresh: _fetchLogs,
-        child: ListView.builder(
-          itemCount: _workoutLogs.length,
-          itemBuilder: (BuildContext context, int index) {
-            var log = _workoutLogs[index];
-            return Card(
-              // ...card content for workout logs
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class MyMealsCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    return SizedBox(
-      width: screenWidth / 3.5,
-      child: Card(
-
-        elevation: 4,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  IconButton(
-                    icon: const Icon(Icons.restaurant),
-                    iconSize: 40, // Set the size of the icon
-                    onPressed: () {
-                      // Navigate to the SetGoalsScreen when the icon is pressed
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => SetGoalsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const Text(
-                'My Meals',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 6),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-
-
