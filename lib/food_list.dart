@@ -1,30 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:csv/csv.dart';
-
-
+import 'create_meals.dart';
+//Food,Measure,Grams,Calories,Protein,Fat,Sat.Fat,Fiber,Carbs,Category
 class Food {
   String? name;
-  double? protein;
-  double? calories;
   String? measurement;
+  double? grams;
+  double? calories;
+  double? protein;
+  double? fat;
+  double? satfat;
+  double? fiber;
+  double? carbs;
+  double? category;
 
-  Food({this.name,this.protein,this.calories,this.measurement});
+  Food({
+    this.name,
+    this.measurement,
+    this.grams,
+    this.calories,
+    this.protein,
+    this.fat,
+    this.satfat,
+    this.fiber,
+    this.carbs,
+    this.category,
+  });
 
   factory Food.fromCsv(List<dynamic> csvData) {
     return Food(
       name: csvData[0],
-      calories: double.tryParse(csvData[3]),
-      protein: double.tryParse(csvData[4]),
       measurement: csvData[1],
+      grams: double.tryParse(csvData[2].toString()) ?? 0.0,
+      calories: double.tryParse(csvData[3].toString()) ?? 0.0,
+      protein: double.tryParse(csvData[4].toString()) ?? 0.0,
+      fat: double.tryParse(csvData[5].toString()) ?? 0.0,
+      satfat: double.tryParse(csvData[6].toString()) ?? 0.0,
+      fiber: double.tryParse(csvData[7].toString()) ?? 0.0,
+      carbs: double.tryParse(csvData[8].toString()) ?? 0.0,
+      category: double.tryParse(csvData[9].toString()) ?? 0.0,
     );
   }
 
-  String toString(){
-    return 'Todo($name, $protein, $calories, $measurement)';
+  String toString() {
+    return 'Food($name, $protein, $calories, $measurement)';
   }
-
-
 }
 
 class foodList extends StatefulWidget {
@@ -34,9 +55,11 @@ class foodList extends StatefulWidget {
 
   @override
   State<foodList> createState() => _foodListState();
+
 }
 
 class _foodListState extends State<foodList> {
+
 
   @override
   void initState() {
@@ -46,7 +69,7 @@ class _foodListState extends State<foodList> {
 
   List<dynamic> _foods = [];
   List<dynamic> _filteredFoods = [];
-  List<Food> meal = [];
+  List<dynamic> meal = [];
 
 
   Future<void> loadFoods() async {
@@ -76,11 +99,30 @@ class _foodListState extends State<foodList> {
   }
 
   void addToMeal(List<dynamic> foodData) {
-    Food food = Food.fromCsv(foodData);
-    setState(() {
-      meal.add(food);
-    });
+    try {
+      Food food = Food.fromCsv(foodData);
+      setState(() {
+        meal.add(food);
+      });
+
+      // Display a success Snackbar
+      const snackBar = SnackBar(
+        content: Text('Food added successfully!'),
+        duration: Duration(seconds: 2),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    } catch (e) {
+      // Display an error Snackbar
+      const snackBar = SnackBar(
+        content: Text('Failed to add food. Please try again.'),
+        duration: Duration(seconds: 2),
+        backgroundColor: Colors.red,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      print('Error $e');
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +161,7 @@ class _foodListState extends State<foodList> {
                   ),
                   onTap: () {
                     addToMeal(food);
+                    print(meal);
                   },
                 );
               },

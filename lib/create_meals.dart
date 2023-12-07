@@ -59,6 +59,7 @@ class _CreateMealScreenState extends State<CreateMealScreen> {
       'foodItems' : _foodItemsController.text,
       'recipes': _recipesController.text,
     };
+
     await DatabaseHelper().insertLog(log);
     Navigator.of(context).push(
       MaterialPageRoute(
