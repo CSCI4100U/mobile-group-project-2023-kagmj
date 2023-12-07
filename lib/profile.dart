@@ -83,64 +83,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                CircleAvatar(
-                  radius: 30,
-                  backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(
-                      avatarUrl) : null,
-                  child: avatarUrl.isEmpty
-                      ? const Icon(Icons.person, size: 30)
-                      : null,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Text(
-                        name,
-                        style: const TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        country,
-                        style: const TextStyle(fontSize: 18, color: Colors.grey),
-                      ),const SizedBox(height: 20),
-                    ],
+      body: SingleChildScrollView( // Wrap the Column with SingleChildScrollView
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: <Widget>[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(
+                        avatarUrl) : null,
+                    child: avatarUrl.isEmpty
+                        ? const Icon(Icons.person, size: 30)
+                        : null,
                   ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                          builder: (context) => const EditProfileScreen()),
-                    ).then((_) {
-                      _loadProfileData();
-                    });
-                  },
-                  child: const Text('Edit Profile'),
-                ),
-              ],
-            ),
-            StatisticsCard(totalWorkouts: totalWorkouts),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Adjust this as needed
-              children: <Widget>[
-                MyGoalsCard(), // MyGoalsCard
-                MyWorkoutsCard(), // MyWorkoutsCard
-                MyMealsCard(), // MyMealsCard
-              ],
-            ),
-            WeeklyGoalProgress(),
-          ],
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          name,
+                          style: const TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          country,
+                          style: const TextStyle(fontSize: 18, color: Colors.grey),
+                        ),const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (context) => const EditProfileScreen()),
+                      ).then((_) {
+                        _loadProfileData();
+                      });
+                    },
+                    child: const Text('Edit Profile'),
+                  ),
+                ],
+              ),
+              StatisticsCard(totalWorkouts: totalWorkouts),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  MyGoalsCard(),
+                  MyWorkoutsCard(),
+                  MyMealsCard(),
+                ],
+              ),
+              WeeklyGoalProgress(),
+            ],
+          ),
         ),
       ),
     );
@@ -321,7 +323,7 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
                   currentValue: 0,
                   goalValue: weeklyGoals['caloriesBurnedGoal'] != 0
                       ? weeklyGoals['caloriesBurnedGoal']!
-                      : 1, // Ensuring goal value isn't zero
+                      : 2500, // Ensuring goal value isn't zero
                 ),
               ),
               Padding(
@@ -331,7 +333,7 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
                   currentValue: 0,
                   goalValue: weeklyGoals['waterIntakeGoal'] != 0
                       ? weeklyGoals['waterIntakeGoal']!
-                      : 1, // Ensuring goal value isn't zero
+                      : 3000, // Ensuring goal value isn't zero
                 ),
               ),
               Padding(
@@ -341,7 +343,7 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
                   currentValue: 0,
                   goalValue: weeklyGoals['workoutsCompletedGoal'] != 0
                       ? weeklyGoals['workoutsCompletedGoal']!
-                      : 1, // Ensuring goal value isn't zero
+                      : 10, // Ensuring goal value isn't zero
                 ),
               ),
               Padding(
@@ -351,7 +353,7 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
                   currentValue: 0,
                   goalValue: weeklyGoals['caloriesGoal'] != 0
                       ? weeklyGoals['caloriesGoal']!
-                      : 1, // Ensuring goal value isn't zero
+                      : 17500, // Ensuring goal value isn't zero
                 ),
               ),
             ],
