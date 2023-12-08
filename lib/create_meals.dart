@@ -26,6 +26,11 @@ class _CreateMealScreenState extends State<CreateMealScreen> {
   final DateFormat _dateFormat = DateFormat('MMMM dd, yyyy');
   final DateFormat _timeFormat = DateFormat('h:mm a');
 
+  void handleMealUpdated(List<dynamic> updatedMeal) {
+    // Do something with the updated meal in CreateMealScreen
+    print(updatedMeal);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -59,6 +64,8 @@ class _CreateMealScreenState extends State<CreateMealScreen> {
       'foodItems' : _foodItemsController.text,
       'recipes': _recipesController.text,
     };
+
+
 
     await DatabaseHelper().insertLog(log);
     Navigator.of(context).push(
@@ -159,9 +166,11 @@ class _CreateMealScreenState extends State<CreateMealScreen> {
                 ),
               ),
             ),
+
             const SizedBox(height: 16),
             const Text("Food Items"),
             const SizedBox(height: 4),
+            /*
             TextField(
               controller: _foodItemsController,
               decoration: InputDecoration(
@@ -175,10 +184,11 @@ class _CreateMealScreenState extends State<CreateMealScreen> {
                 ),
               ),
             ),
+            */
             ElevatedButton(onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => foodList(title: 'Food List'),
+                  builder: (context) => foodList(title: 'Food List', onMealUpdated: handleMealUpdated),
                 ),
               );
             }, child: Text('Food List')),

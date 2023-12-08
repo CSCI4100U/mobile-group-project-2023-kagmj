@@ -31,7 +31,7 @@ class Food {
   factory Food.fromCsv(List<dynamic> csvData) {
     return Food(
       name: csvData[0],
-      measurement: csvData[1],
+      measurement: csvData[1].toString(),
       grams: double.tryParse(csvData[2].toString()) ?? 0.0,
       calories: double.tryParse(csvData[3].toString()) ?? 0.0,
       protein: double.tryParse(csvData[4].toString()) ?? 0.0,
@@ -39,17 +39,22 @@ class Food {
       satfat: double.tryParse(csvData[6].toString()) ?? 0.0,
       fiber: double.tryParse(csvData[7].toString()) ?? 0.0,
       carbs: double.tryParse(csvData[8].toString()) ?? 0.0,
-      category: double.tryParse(csvData[9].toString()) ?? 0.0,
+      category: (int.tryParse(csvData[9].toString()) ?? 0).toDouble(),
     );
   }
 
   String toString() {
     return 'Food($name, $protein, $calories, $measurement)';
   }
+
 }
 
 class foodList extends StatefulWidget {
-  foodList({Key? key, this.title}):super(key: key);
+  //foodList({Key? key, this.title}):super(key: key);
+  final void Function(List<dynamic>) onMealUpdated;
+
+  foodList({super.key, this.title, required this.onMealUpdated});
+
 
   String? title;
 
@@ -71,6 +76,9 @@ class _foodListState extends State<foodList> {
   List<dynamic> _filteredFoods = [];
   List<dynamic> meal = [];
 
+  List<dynamic> getMeal(){
+    return meal;
+  }
 
   Future<void> loadFoods() async {
     //var url = 'https://raw.githubusercontent.com/techjollof/USDA-Food-Database-Analyzing-Nutrient-Information/master/smallerDataSet.csv';
@@ -105,6 +113,9 @@ class _foodListState extends State<foodList> {
         meal.add(food);
       });
 
+      // Call the callback to notify the parent
+      widget.onMealUpdated(meal);
+
       // Display a success Snackbar
       const snackBar = SnackBar(
         content: Text('Food added successfully!'),
@@ -123,6 +134,19 @@ class _foodListState extends State<foodList> {
     }
   }
 
+  void deleteFood(int index) {
+    setState(() {
+      meal.removeAt(index);
+    });
+
+    // Display a success Snackbar
+    const snackBar = SnackBar(
+      content: Text('Food removed successfully!'),
+      duration: Duration(seconds: 2),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -130,41 +154,83 @@ class _foodListState extends State<foodList> {
       appBar: AppBar(
         title: Text('Food List'),
       ),
-      body: Column(
+      body: Row(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              onChanged: (value) {
-                filterFoods(value);
-              },
-              decoration: InputDecoration(
-                labelText: 'Search Food',
-                hintText: 'Enter food name',
-              ),
+          Expanded(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    onChanged: (value) {
+                      filterFoods(value);
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'Search Food',
+                      hintText: 'Enter food name',
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _filteredFoods.length,
+                    itemBuilder: (context, index) {
+                      var food = _filteredFoods[index];
+                      return ListTile(
+                        title: Text(food[0]),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Calories: ${food[3]}"),
+                            Text("Protein: ${food[4]}g"),
+                            Text("per ${food[1]}"),
+                          ],
+                        ),
+                        onTap: () {
+                          addToMeal(food);
+                          print(meal);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
+          // Divider between the two ListViews
+          VerticalDivider(width: 1, color: Colors.black),
           Expanded(
-            child: ListView.builder(
-              itemCount: _filteredFoods.length,
-              itemBuilder: (context, index) {
-                var food = _filteredFoods[index];
-                return ListTile(
-                  title: Text(food[0]),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Calories: ${food[3]}"),
-                      Text("Protein: ${food[4]}g"),
-                      Text("per ${food[1]}"),
-                    ],
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center, // Center the title
+              children: [
+                SizedBox(height: 20),
+                Text(
+                  'Meal List',
+                  style: TextStyle(
+                    fontSize: 20, // Adjust the font size as needed
+                    fontWeight: FontWeight.bold,
                   ),
-                  onTap: () {
-                    addToMeal(food);
-                    print(meal);
-                  },
-                );
-              },
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: meal.length,
+                    itemBuilder: (context, index) {
+                      var food = meal[index];
+                      return ListTile(
+                        title: Text(food.name ?? ""),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Calories: ${food.calories}"),
+                            Text("Protein: ${food.protein}g"),
+                            // Add more details as needed
+                          ],
+                        ),
+                        onLongPress: () => deleteFood(index),                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ],
