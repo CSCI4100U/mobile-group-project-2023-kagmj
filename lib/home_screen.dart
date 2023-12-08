@@ -1,10 +1,13 @@
 // ignore_for_file: library_private_types_in_public_api, deprecated_member_use
+import 'dart:async';
+import 'package:final_project/log_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:final_project/view_routine.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:final_project/log_database.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'create_routine.dart';
 import 'create_water.dart';
@@ -12,6 +15,7 @@ import 'create_log.dart';
 import 'create_meals.dart';
 import 'list_routines.dart';
 import 'profile.dart';
+import 'package:geolocator/geolocator.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,20 +25,107 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  Position? _lastPosition;
   int _selectedIndex = 0;
+  int _dailyCaloriesBurned=0;
   List<Map<String, dynamic>> _logs = [];
   String userName = '';
   String avatarUrl = '';
   String _waterIntakeValue = 'XX ml'; // Initialize _waterIntakeValue here
   int _totalWorkouts = 0;
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  static const double caloriesBurnedPerKm = 1.5;
+  double userWeight = 70.0;
+  bool isLoggedIn=false;
+  Timer? caloriesTimer;
+  Timer? distanceTimer;
+  StreamSubscription<Position>? _positionStreamSubscription;
 
   @override
   void initState() {
     super.initState();
     _fetchLogs();
     _loadProfileData();
+    _loadUserWeight();
+    _calculateTotalDistance();
+    _startPeriodicFunctions();
+  }
+  @override
+  void dispose() {
+    caloriesTimer?.cancel();
+    distanceTimer?.cancel();
+    _positionStreamSubscription?.cancel();
+    super.dispose();
+  }
+  void _startPeriodicFunctions() {
+    if (mounted) {
+      caloriesTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+        _loadUserWeight().then((_) {
+          calculateCaloriesBurned();
+        });
+      });
+
+      distanceTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+        _calculateTotalDistance();
+      });
+    }
+  }
+  Future<void> _calculateTotalDistance() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        // Handle denied permission scenario here
+        return;
+      }
+    }
+
+    _positionStreamSubscription = Geolocator.getPositionStream().listen(
+          (Position position) async {
+        if (_lastPosition != null) {
+          // Store location data in SQLite
+          await DatabaseHelper().insertLocation(
+            position.latitude,
+            position.longitude,
+            DateTime.now().millisecondsSinceEpoch,
+          );
+        }
+        _lastPosition = position;
+      },
+      onError: (dynamic error) {
+        if (error is PermissionDeniedException) {
+          // Handle permission denied error here
+        }
+      },
+    );
   }
 
+  void calculateCaloriesBurned() {
+    // Ensure user weight is available before calculations
+    if (userWeight != null) {
+      Future<double> doubleFuture= DatabaseHelper().getDailyDistance();
+      doubleFuture.then((double value) {
+        int calculatedCalories = (caloriesBurnedPerKm * (value / 1000) * userWeight!).toInt();
+        setState(() {
+          _dailyCaloriesBurned=calculatedCalories;
+        });
+      });
+    }
+  }
+  Future<void> _loadUserWeight() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot userProfile = await FirebaseFirestore.instance
+          .collection('profiles').doc(user.uid).get();
+      if (userProfile.exists) {
+        Map<String, dynamic>? data = userProfile.data() as Map<String,
+            dynamic>?;
+          userWeight =  double.parse(data?['weight']);
+          isLoggedIn =  data?['profileSetupComplete'];
+      }
+    }
+  }
   Future<void> _fetchLogs() async {
     _logs = await DatabaseHelper().getLogs(); // Fetch logs from the database
 
@@ -60,11 +151,6 @@ class _HomeScreenState extends State<HomeScreen> {
       print('Error fetching total workouts: $e');
     }
   }
-
-
-
-
-
   void _deleteLog(int id) async {
     await DatabaseHelper().deleteLog(id); // Delete from database
     setState(() {
@@ -89,15 +175,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-
-
-
   Widget _buildHomeScreen() {
-    return RefreshIndicator(
-      onRefresh: _fetchLogs,
-      child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    return  RefreshIndicator(
+            onRefresh: _fetchLogs,
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
       // Daily Goals Tracker Card
       Card(
       margin: const EdgeInsets.all(8.0),
@@ -123,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: Column(
                       children: [
-                        _buildGoalDetail('Calories Burned', 'XXXX', Icons.local_fire_department),
+                        _buildGoalDetail('Calories Burned', '$_dailyCaloriesBurned', Icons.local_fire_department),
                         _buildSpacer(),
                         _buildGoalDetail('Number of Workouts', '$_totalWorkouts', Icons.fitness_center),
                       ],
@@ -273,7 +356,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     )]));
   }
-
   Widget _buildSpacer() {
     return SizedBox(height: 16);
   }
@@ -301,14 +383,53 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Widget> _buildWidgetOptions() {
     return <Widget>[
-      _buildHomeScreen(),
-      const Scaffold(body: CreateMealScreen()),
-      const Scaffold(body: CreateLogScreen()),
-      const Scaffold(body: CreateWaterScreen()),
-      const Scaffold(body: ListRoutinesScreen()),
-      const Scaffold(body: ProfileScreen()),
+      WillPopScope(
+        onWillPop: () async {
+          SystemNavigator.pop();
+          return true;
+        },
+        child: _buildHomeScreen(),
+      ),
+      WillPopScope(
+        onWillPop: () async {
+          caloriesTimer?.cancel();
+          distanceTimer?.cancel();
+          SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+          return true;
+        },
+        child: const Scaffold(body: CreateMealScreen()),
+      ),
+      WillPopScope(
+        onWillPop: () async {
+          SystemNavigator.pop();
+          return true;
+        },
+        child: const Scaffold(body: CreateLogScreen()),
+      ),
+      WillPopScope(
+        onWillPop: () async {
+          SystemNavigator.pop();
+          return true;
+        },
+        child: const Scaffold(body: CreateWaterScreen()),
+      ),
+      WillPopScope(
+        onWillPop: () async {
+          SystemNavigator.pop();
+          return true;
+        },
+        child: const Scaffold(body: ListRoutinesScreen()),
+      ),
+      WillPopScope(
+        onWillPop: () async {
+          SystemNavigator.pop();
+          return true;
+        },
+        child: const Scaffold(body: ProfileScreen()),
+      ),
     ];
   }
+
 
   List<TextSpan> _buildTextSpans(String text) {
     final RegExp linkRegExp = RegExp(r'\bhttps?:\/\/\S+\b', caseSensitive: false);

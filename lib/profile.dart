@@ -1,5 +1,7 @@
 // ignore_for_file: library_private_types_in_public_api
 
+import 'dart:async';
+
 import 'package:final_project/profile_my_meal.dart';
 import 'package:final_project/view_routine.dart';
 
@@ -23,29 +25,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String name = '';
   String country = '';
   String avatarUrl = '';
+  late Timer _timer;
+  double userWeight=0;
+  int caloriesBurned=0;
+  static const double caloriesBurnedPerKm = 1.5;
   int totalWorkouts = 0; // New variable to store the total workout count
 
   @override
   void initState() {
     super.initState();
     _loadProfileData();
-    _loadTotalWorkouts();
   }
-
-  Future<void> _loadTotalWorkouts() async {
-    try {
-      // Get total workouts using DatabaseHelper function
-      Map<int, int> workoutsPerLog = await DatabaseHelper().getTotalWorkoutsPerLog();
-
-      // Calculate total workouts from the map values
-      int total = workoutsPerLog.values.fold(0, (sum, count) => sum + count);
-
-      setState(() {
-        totalWorkouts = total;
-      });
-    } catch (e) {
-      print('Error fetching total workouts: $e');
-    }
+  @override
+  void dispose() {
+    // Dispose the timer when the widget is removed
+    _timer.cancel();
+    super.dispose();
   }
   // Load Profile Data - Loads information from Firebase for the current user
   Future<void> _loadProfileData() async {
@@ -59,12 +54,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           name = data?['name'] ?? '';
           country = data?['country'] ?? '';
-          avatarUrl = data?['avatarUrl'] ??
-              '';
+          avatarUrl = data?['avatarUrl'] ?? '';
+          userWeight = double.parse(data?['weight']);
         });
       }
     }
+    _loadAdditionalData();
   }
+  Future<void> _loadAdditionalData() async {
+    // Load workouts and calories after profile data is loaded
+    await _loadTotalWorkouts();
+    await _loadTotalCaloriesBurned();
+    _startTimer(); // Start the timer after loading data
+  }
+  void _startTimer() {
+    // Execute _loadTotalCaloriesBurned() every 30 seconds
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      _loadTotalCaloriesBurned();
+    });
+  }
+  Future<void> _loadTotalWorkouts() async {
+    try {
+      // Get total workouts using DatabaseHelper function
+      Map<int, int> workoutsPerLog = await DatabaseHelper().getTotalWorkoutsPerLog();
+
+      // Calculate total workouts from the map values
+      int total = workoutsPerLog.values.fold(0, (sum, count) => sum + count);
+
+      if (mounted) {
+        setState(() {
+          totalWorkouts = total;
+        });
+      }
+    } catch (e) {
+      print('Error fetching total workouts: $e');
+    }
+  }
+  Future<void> _loadTotalCaloriesBurned() async {
+    try {
+      // Get total workouts using DatabaseHelper function
+      double distance = await DatabaseHelper().getTotalDistance();
+
+      // Calculate total calories burned from the map values
+      int calculatedCalories = (caloriesBurnedPerKm * (distance / 1000) * userWeight!).toInt();
+      print(calculatedCalories);
+      setState(() {
+        caloriesBurned=calculatedCalories;
+      });
+    } catch (e) {
+      print('Error fetching total workouts: $e');
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +172,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ],
             ),
-            StatisticsCard(totalWorkouts: totalWorkouts),
+            StatisticsCard(totalWorkouts: totalWorkouts, caloriesBurned: caloriesBurned,),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Adjust this as needed
               children: <Widget>[
@@ -150,19 +191,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 class StatisticsCard extends StatefulWidget {
   final int totalWorkouts;
+  final int caloriesBurned;
 
-  const StatisticsCard({Key? key, required this.totalWorkouts}) : super(key: key);
+  const StatisticsCard({
+    Key? key,
+    required this.totalWorkouts,
+    required this.caloriesBurned,
+  }) : super(key: key);
 
   @override
   _StatisticsCardState createState() => _StatisticsCardState();
 }
 
 class _StatisticsCardState extends State<StatisticsCard> {
-  int goalWorkout = 50;
+  int goalWorkout = 50; // Set your workout goal here
+  int goalCaloriesBurned = 500; // Set your calorie burning goal here
 
   @override
   Widget build(BuildContext context) {
-    int achievements = widget.totalWorkouts ~/ goalWorkout;
+    int workoutAchievements = widget.totalWorkouts ~/ goalWorkout;
+    int caloriesAchievements = widget.caloriesBurned ~/ goalCaloriesBurned;
 
     return Card(
       elevation: 4,
@@ -171,42 +219,72 @@ class _StatisticsCardState extends State<StatisticsCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Icon(Icons.directions_run),
-                Text(
-                  'Total Workouts',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
+            const Text(
+              'Your Progress',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            LinearProgressIndicator(
+            _buildProgressIndicator(
               value: (widget.totalWorkouts % goalWorkout) / goalWorkout,
-              backgroundColor: Colors.grey[300],
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+              color: Colors.blue, // Workout progress color
+              label: 'Workouts',
+              currentValue: widget.totalWorkouts,
+              goalValue: goalWorkout,
+              achievements: workoutAchievements,
             ),
-            const SizedBox(height: 10),
-            Text(
-              'Total Workouts: ${widget.totalWorkouts}',
-              style: const TextStyle(fontSize: 16),
-            ),
-            if (achievements > 0) ...[
-              const SizedBox(height: 10),
-              Text(
-                'Achievements: $achievements',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              ),
-            ],
-            const SizedBox(height: 10),
-            Text(
-              'Goal Workout: $goalWorkout',
-              style: const TextStyle(fontSize: 14),
+            const SizedBox(height: 20),
+            _buildProgressIndicator(
+              value: (widget.caloriesBurned % goalCaloriesBurned) / goalCaloriesBurned,
+              color: Colors.red, // Calories burned progress color
+              label: 'Calories Burned',
+              currentValue: widget.caloriesBurned,
+              goalValue: goalCaloriesBurned,
+              achievements: caloriesAchievements,
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildProgressIndicator({
+    required double value,
+    required Color color,
+    required String label,
+    required int currentValue,
+    required int goalValue,
+    required int achievements,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text(
+              label,
+              style: const TextStyle(fontSize: 16),
+            ),
+            Text(
+              '$currentValue / $goalValue',
+              style: const TextStyle(fontSize: 16),
+            ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        LinearProgressIndicator(
+          value: value,
+          backgroundColor: Colors.grey[300],
+          valueColor: AlwaysStoppedAnimation<Color>(color),
+        ),
+        if (achievements > 0) ...[
+          const SizedBox(height: 5),
+          Text(
+            'Achievements: $achievements',
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ],
     );
   }
 
@@ -324,7 +402,7 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
                   currentValue: 0,
                   goalValue: weeklyGoals['caloriesBurnedGoal'] != 0
                       ? weeklyGoals['caloriesBurnedGoal']!
-                      : 1, // Ensuring goal value isn't zero
+                      : 2500, // Ensuring goal value isn't zero
                 ),
               ),
               Padding(
@@ -334,7 +412,7 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
                   currentValue: 0,
                   goalValue: weeklyGoals['waterIntakeGoal'] != 0
                       ? weeklyGoals['waterIntakeGoal']!
-                      : 1, // Ensuring goal value isn't zero
+                      : 28000, // Ensuring goal value isn't zero
                 ),
               ),
               Padding(
@@ -344,7 +422,7 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
                   currentValue: 0,
                   goalValue: weeklyGoals['workoutsCompletedGoal'] != 0
                       ? weeklyGoals['workoutsCompletedGoal']!
-                      : 1, // Ensuring goal value isn't zero
+                      : 15, // Ensuring goal value isn't zero
                 ),
               ),
               Padding(
@@ -354,7 +432,7 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
                   currentValue: 0,
                   goalValue: weeklyGoals['caloriesGoal'] != 0
                       ? weeklyGoals['caloriesGoal']!
-                      : 1, // Ensuring goal value isn't zero
+                      : 150000, // Ensuring goal value isn't zero
                 ),
               ),
             ],
