@@ -1,13 +1,13 @@
 // ignore_for_file: library_private_types_in_public_api, deprecated_member_use
 import 'dart:async';
-
+import 'package:final_project/log_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:final_project/view_routine.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:final_project/log_database.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'create_routine.dart';
 import 'create_water.dart';
@@ -27,14 +27,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   Position? _lastPosition;
   int _selectedIndex = 0;
-  ValueNotifier<int> _caloriesBurnedNotifier = ValueNotifier<int>(0);
+  int _dailyCaloriesBurned=0;
   List<Map<String, dynamic>> _logs = [];
   String userName = '';
   String avatarUrl = '';
   String _waterIntakeValue = 'XX ml'; // Initialize _waterIntakeValue here
   int _totalWorkouts = 0;
-  ValueNotifier<double> _totalDistanceNotifier = ValueNotifier<double>(0);
-  static const double caloriesBurnedPerKm = 6.0;
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  static const double caloriesBurnedPerKm = 1.5;
   double userWeight = 70.0;
   bool isLoggedIn=false;
   Timer? caloriesTimer;
@@ -58,46 +58,60 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
   void _startPeriodicFunctions() {
-    // Start periodic function calls every minute
-    if(mounted) {
-      caloriesTimer=Timer.periodic(Duration(minutes: 1), (timer) {
-        calculateCaloriesBurned( _totalDistanceNotifier.value);
+    if (mounted) {
+      caloriesTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+        _loadUserWeight().then((_) {
+          calculateCaloriesBurned();
+        });
       });
-      distanceTimer=Timer.periodic(Duration(seconds: 10), (timer) {
+
+      distanceTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
         _calculateTotalDistance();
       });
     }
   }
-  void _calculateTotalDistance() async {
-    if (mounted) {
-      LocationPermission permission = await Geolocator.requestPermission();
-
-      if (permission == LocationPermission.denied) {
-        _totalDistanceNotifier.value += 0;
+  Future<void> _calculateTotalDistance() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        // Handle denied permission scenario here
+        return;
       }
-
-      _positionStreamSubscription =
-          Geolocator.getPositionStream().listen((Position position) {
-            if (mounted) {
-              if (_lastPosition != null) {
-                double distanceInMeters = Geolocator.distanceBetween(
-                  _lastPosition!.latitude,
-                  _lastPosition!.longitude,
-                  position.latitude,
-                  position.longitude,
-                );
-                _totalDistanceNotifier.value += distanceInMeters;
-              }
-              _lastPosition = position;
-            }
-          });
     }
-  }
-  void calculateCaloriesBurned(double distanceInKm) async {
-    User? user = FirebaseAuth.instance.currentUser;
-    double calculatedCalories = caloriesBurnedPerKm * (_totalDistanceNotifier.value / 1000) * userWeight;
 
-    _caloriesBurnedNotifier.value = calculatedCalories.toInt();
+    _positionStreamSubscription = Geolocator.getPositionStream().listen(
+          (Position position) async {
+        if (_lastPosition != null) {
+          // Store location data in SQLite
+          await DatabaseHelper().insertLocation(
+            position.latitude,
+            position.longitude,
+            DateTime.now().millisecondsSinceEpoch,
+          );
+        }
+        _lastPosition = position;
+      },
+      onError: (dynamic error) {
+        if (error is PermissionDeniedException) {
+          // Handle permission denied error here
+        }
+      },
+    );
+  }
+
+  void calculateCaloriesBurned() {
+    // Ensure user weight is available before calculations
+    if (userWeight != null) {
+      Future<double> doubleFuture= DatabaseHelper().getDailyDistance();
+      doubleFuture.then((double value) {
+        int calculatedCalories = (caloriesBurnedPerKm * (value / 1000) * userWeight!).toInt();
+        setState(() {
+          _dailyCaloriesBurned=calculatedCalories;
+        });
+      });
+    }
   }
   Future<void> _loadUserWeight() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -107,11 +121,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (userProfile.exists) {
         Map<String, dynamic>? data = userProfile.data() as Map<String,
             dynamic>?;
-        setState(() {
           userWeight =  double.parse(data?['weight']);
           isLoggedIn =  data?['profileSetupComplete'];
-              '';
-        });
       }
     }
   }
@@ -195,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: Column(
                       children: [
-                        _buildGoalDetail('Calories Burned', '$_caloriesBurnedNotifier', Icons.local_fire_department),
+                        _buildGoalDetail('Calories Burned', '$_dailyCaloriesBurned', Icons.local_fire_department),
                         _buildSpacer(),
                         _buildGoalDetail('Number of Workouts', '$_totalWorkouts', Icons.fitness_center),
                       ],
@@ -374,10 +385,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return <Widget>[
       WillPopScope(
         onWillPop: () async {
-          dispose();
           SystemNavigator.pop();
           return true;
-          return true; // Return true to allow the screen to be popped
         },
         child: _buildHomeScreen(),
       ),
@@ -385,7 +394,6 @@ class _HomeScreenState extends State<HomeScreen> {
         onWillPop: () async {
           caloriesTimer?.cancel();
           distanceTimer?.cancel();
-          dispose();
           SystemChannels.platform.invokeMethod('SystemNavigator.pop');
           return true;
         },
@@ -393,37 +401,29 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       WillPopScope(
         onWillPop: () async {
-          dispose();
           SystemNavigator.pop();
           return true;
-          return true; // Return true to allow the screen to be popped
         },
         child: const Scaffold(body: CreateLogScreen()),
       ),
       WillPopScope(
         onWillPop: () async {
-          dispose();
           SystemNavigator.pop();
           return true;
-          return true; // Return true to allow the screen to be popped
         },
         child: const Scaffold(body: CreateWaterScreen()),
       ),
       WillPopScope(
         onWillPop: () async {
-          dispose();
           SystemNavigator.pop();
           return true;
-          return true; // Return true to allow the screen to be popped
         },
         child: const Scaffold(body: ListRoutinesScreen()),
       ),
       WillPopScope(
         onWillPop: () async {
-          dispose();
           SystemNavigator.pop();
           return true;
-          return true; // Return true to allow the screen to be popped
         },
         child: const Scaffold(body: ProfileScreen()),
       ),

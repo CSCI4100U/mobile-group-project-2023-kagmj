@@ -1,4 +1,5 @@
 import 'package:final_project/routine.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -6,6 +7,8 @@ class DatabaseHelper {
   static Database? _database;
   static const String tableName = 'logs';
   static const String goalsTableName = 'weeklyGoals';
+  static const String locationsTableName = 'locations';
+  static const String dailyStatsTableName = 'dailyStats';
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -24,7 +27,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'your_database.db');
     return await openDatabase(
       path,
-      version: 12,
+      version: 13,
       onCreate: (Database db, int version) async {
         await db.execute('''
         CREATE TABLE $tableName (
@@ -63,9 +66,66 @@ class DatabaseHelper {
           caloriesGoal INTEGER
         )
       ''');
+        await db.execute('''
+        CREATE TABLE $locationsTableName (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          latitude REAL,
+          longitude REAL,
+          timestamp INTEGER
+        )
+      ''');
       },
       onUpgrade: _onUpgrade,
     );
+  }
+  Future<void> insertLocation(double latitude, double longitude, int timestamp) async {
+    await _database?.insert('locations', {
+      'latitude': latitude,
+      'longitude': longitude,
+      'timestamp': timestamp,
+    });
+  }
+  Future<double> getTotalDistance() async {
+    final List<Map<String, dynamic?>>? locations = await _database?.query('locations');
+    double totalDistance = 0;
+
+    for (int i = 0; i < locations!.length - 1; i++) {
+      double lat1 = locations[i]['latitude'] as double;
+      double lon1 = locations[i]['longitude'] as double;
+      double lat2 = locations[i + 1]['latitude'] as double;
+      double lon2 = locations[i + 1]['longitude'] as double;
+
+      totalDistance += Geolocator.distanceBetween(lat1, lon1, lat2, lon2);
+    }
+
+    return totalDistance;
+  }
+  Future<double> getDailyDistance() async {
+    final List<Map<String, dynamic>>? locations =
+    await _database?.query('locations');
+
+    double totalDistance = 0;
+    DateTime now = DateTime.now();
+    int todayStart = DateTime(now.year, now.month, now.day).millisecondsSinceEpoch;
+    int todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59, 999).millisecondsSinceEpoch;
+
+    if (locations != null) {
+      for (int i = 0; i < locations.length - 1; i++) {
+        int timestamp = locations[i]['timestamp'] as int;
+
+        // Check if the location was recorded within the current day
+        if (timestamp >= todayStart && timestamp <= todayEnd) {
+          double lat1 = locations[i]['latitude'] as double;
+          double lon1 = locations[i]['longitude'] as double;
+          double lat2 = locations[i + 1]['latitude'] as double;
+          double lon2 = locations[i + 1]['longitude'] as double;
+
+          totalDistance += Geolocator.distanceBetween(lat1, lon1, lat2, lon2);
+        }
+      }
+    }
+
+    return totalDistance;
   }
   Future<void> insertWeeklyGoals(Map<String, int> goals) async {
     final db = await database;
@@ -110,15 +170,16 @@ class DatabaseHelper {
 
     return List.generate(maps.length, (i) {
       return Routine(
-        id: maps[i]['id'],
+        id: maps[i]['id'] ?? 0,
         name: maps[i]['name'],
         days: maps[i]['days'],
         equipment: maps[i]['equipment'],
         workouts: maps[i]['workouts'].split(', '),
-        workoutCount: maps[i]['workoutCount'],
+        workoutCount: maps[i]['workoutCount'] ?? 0,
       );
     });
   }
+
 
   Future<void> deleteRoutine(int id) async {
     final db = await database;
@@ -141,16 +202,15 @@ class DatabaseHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 11) {
+    if (oldVersion < 12) {
       await db.execute('''
-      CREATE TABLE $goalsTableName (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        caloriesBurnedGoal INTEGER,
-        waterIntakeGoal INTEGER,
-        workoutsCompletedGoal INTEGER,
-        caloriesGoal INTEGER
-      )
-    ''');
+        CREATE TABLE $locationsTableName (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          latitude REAL,
+          longitude REAL,
+          timestamp INTEGER
+        )
+      ''');
     }
 
     if (oldVersion < 10) {

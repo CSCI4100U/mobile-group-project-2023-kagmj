@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:final_project/log_database.dart';
 import 'home_screen.dart';
+import 'food_list.dart';
 
 class CreateMealScreen extends StatefulWidget {
   const CreateMealScreen({super.key});
@@ -58,6 +59,7 @@ class _CreateMealScreenState extends State<CreateMealScreen> {
       'foodItems' : _foodItemsController.text,
       'recipes': _recipesController.text,
     };
+
     await DatabaseHelper().insertLog(log);
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -173,6 +175,13 @@ class _CreateMealScreenState extends State<CreateMealScreen> {
                 ),
               ),
             ),
+            ElevatedButton(onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => foodList(title: 'Food List'),
+                ),
+              );
+            }, child: Text('Food List')),
             const SizedBox(height: 16),
             const Text("Date"),
             const SizedBox(height: 4),

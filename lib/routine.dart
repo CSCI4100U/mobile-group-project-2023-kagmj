@@ -22,11 +22,13 @@ class Routine {
   factory Routine.fromMap(Map<String, dynamic> map) {
     return Routine(
       id: map['id'],
-      name: map['name'],
-      days: map['days'],
-      equipment: map['equipment'],
-      workouts: map['workouts'].split(', '), // Convert string to list of workouts
-      workoutCount: map['workoutCount'] ?? 0, // Assign workout count from the map
+      name: map['name'] ?? 'My Routine',
+      days: map['days'] ?? '',
+      equipment: map['equipment'] ?? '',
+      workouts: map['workouts'] != null
+          ? map['workouts'].split(', ')
+          : <String>[],
+      workoutCount: map['workoutCount'] ?? 0,
     );
   }
 }

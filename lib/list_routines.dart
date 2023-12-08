@@ -1,5 +1,8 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:final_project/routine.dart';
 import 'package:final_project/view_routine.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'create_routine.dart';
 import 'edit_routine.dart';
@@ -64,7 +67,7 @@ class _ListRoutinesScreenState extends State<ListRoutinesScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   IconButton(
-                    icon: Icon(Icons.edit),
+                    icon: const Icon(Icons.edit),
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -77,14 +80,16 @@ class _ListRoutinesScreenState extends State<ListRoutinesScreen> {
                     },
                   ),
                   IconButton(
-                    icon: Icon(Icons.delete),
+                    icon: const Icon(Icons.delete),
                     onPressed: () async {
                       if (routines[index].id != null) {
                         await DatabaseHelper().deleteRoutine(routines[index].id!);
                         loadRoutines(); // Reload routines to reflect the deletion
                       } else {
                         // Handle the case where id is null
-                        print("Error: Routine ID is null");
+                        if (kDebugMode) {
+                          print("Error: Routine ID is null");
+                        }
                       }
                     },
                   ),
