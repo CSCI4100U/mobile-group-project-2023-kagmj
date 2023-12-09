@@ -34,7 +34,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       User? user = FirebaseAuth.instance.currentUser;
 
       if (user != null) {
-        // Create a document in Firestore
+        // Create a document in Firestore for the user's profile
         await FirebaseFirestore.instance.collection('profiles').doc(user.uid).set({
           'name': _nameController.text,
           'country': _selectedCountry ?? '',
@@ -43,10 +43,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           'height': _heightController.text,
           'weight': _weightController.text,
           'profileSetupComplete': true,
+          'notificationDays': [''],
+          'notificationHour': '0',
+          'notificationMinute': '0',
+          'notificationSetup': false
         });
 
         // Send notification upon profile creation
-        await _notificationService.sendNotification('Profile Setup Complete', 'Your profile setup is complete!');
+        await _notificationService.sendNotification('Profile Setup Complete', 'Configure notifications in settings!');
 
         // Navigate to the home screen
         Navigator.pushReplacement(
