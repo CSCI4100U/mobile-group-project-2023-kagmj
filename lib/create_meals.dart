@@ -132,23 +132,6 @@ class _CreateMealScreenState extends State<CreateMealScreen> {
     return totalCals;
   }
 
-
-
-  double getCalories(List<dynamic> meals){
-    double totalCals = 0.0;
-    for (int i = 0; i < meals.length; i++){
-      List<String> parts = meals[i].split('calories: ');
-      if(parts.length == 2){
-        String calStr = parts[1].split(',')[0].trim();
-        double calInt = double.parse(calStr);
-        totalCals += calInt;
-      }else{
-        print('Error');
-      }
-    }
-    return totalCals;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
