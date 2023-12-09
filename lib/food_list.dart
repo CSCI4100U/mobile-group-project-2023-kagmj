@@ -46,7 +46,7 @@ class Food {
   }
 
   String toString() {
-    return 'Food($name, $protein, $calories, $measurement)';
+    return '$name, protein: $protein, calories: $calories, per $measurement)';
   }
 
 }
