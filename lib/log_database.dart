@@ -1,5 +1,6 @@
 import 'package:final_project/routine.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -27,7 +28,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'your_database.db');
     return await openDatabase(
       path,
-      version: 13,
+      version: 14,
       onCreate: (Database db, int version) async {
         await db.execute('''
         CREATE TABLE $tableName (
@@ -43,6 +44,7 @@ class DatabaseHelper {
           foodItems TEXT,
           recipes TEXT,
           routineId INTEGER,
+          calories REAL,
           waterIntake TEXT,
           FOREIGN KEY (routineId) REFERENCES routines(id)
         )
@@ -77,6 +79,155 @@ class DatabaseHelper {
       },
       onUpgrade: _onUpgrade,
     );
+  }
+  Future<double> getDailyCalories() async {
+    String today =  DateFormat('MMMM dd, yyyy').format(DateTime.now()); // Get today's date in 'yyyy-MM-dd' format
+
+    Database db = await initDatabase(); // Assuming you've defined initDatabase to initialize your SQLite database
+    List<Map<String, dynamic>> result = await db.query(
+      tableName,
+      where: 'logDate = ? AND type = ?',
+      whereArgs: [today,'meal'],
+      columns: ['calories'],
+    );
+    double totalCalories = result.fold<double>(
+      0,
+          (previousValue, row) =>
+      previousValue + (row['calories'] ?? 0),
+    );
+    return totalCalories;
+  }
+
+  Future<int> getDailyNumberOfWorkouts() async {
+    String today =  DateFormat('MMMM dd, yyyy').format(DateTime.now());
+    Database db = await initDatabase(); // Assuming you've defined initDatabase to initialize your SQLite database
+    List<Map<String, dynamic>> result = await db.query(
+      tableName,
+      where: 'logDate = ? AND type = ?',
+      whereArgs: [today,'workout'],
+    );
+    Set<int> routineIds = Set<int>();
+    for (var row in result) {
+      int routineId = row['routineId'] as int;
+      routineIds.add(routineId);
+    }
+
+    int numberOfWorkouts = 0;
+    for (int routineId in routineIds) {
+      List<Map<String, dynamic>> routinesResult = await db.query(
+        'routines',
+        where: 'id = ? AND workoutCount > 0',
+        whereArgs: [routineId],
+        columns: ['workoutCount'],
+      );
+      if (routinesResult.isNotEmpty) {
+        numberOfWorkouts += routinesResult[0]['workoutCount'] as int;
+      }
+    }
+
+    return numberOfWorkouts;
+  }
+  Future<double> getWeeklyCalories() async {
+    DateTime now = DateTime.now();
+    DateTime startOfWeek = DateTime(now.year, now.month, now.day - now.weekday); // Assuming Sunday is the start of the week
+    DateTime endOfWeek = startOfWeek.add(const Duration(days: 7)); // A week ahead
+
+    Database db = await initDatabase();
+    List<Map<String, dynamic>> result = await db.query(
+      tableName,
+      where: 'logDate >= ? AND logDate <= ? AND type = ?',
+      whereArgs: [
+        DateFormat('MMMM dd, yyyy').format(startOfWeek),
+        DateFormat('MMMM dd, yyyy').format(endOfWeek),
+        'meal',
+      ],
+      columns: ['calories'],
+    );
+
+    double totalCalories = result.fold<double>(
+      0,
+          (previousValue, row) => previousValue + (row['calories'] ?? 0),
+    );
+    return totalCalories;
+  }
+
+  Future<int> getWeeklyNumberOfWorkouts() async {
+    DateTime now = DateTime.now();
+    DateTime startOfWeek = DateTime(now.year, now.month, now.day - now.weekday); // Assuming Sunday is the start of the week
+    DateTime endOfWeek = startOfWeek.add(const Duration(days: 7)); // A week ahead
+
+    Database db = await initDatabase();
+    List<Map<String, dynamic>> result = await db.query(
+      tableName,
+      where: 'logDate >= ? AND logDate <= ? AND type = ?',
+      whereArgs: [
+        DateFormat('MMMM dd, yyyy').format(startOfWeek),
+        DateFormat('MMMM dd, yyyy').format(endOfWeek),
+        'workout',
+      ],
+    );
+
+    Set<int> routineIds = {};
+    for (var row in result) {
+      routineIds.add(row['routineId'] as int);
+    }
+
+    int numberOfWorkouts = 0;
+    for (int routineId in routineIds) {
+      List<Map<String, dynamic>> routinesResult = await db.query(
+        'routines',
+        where: 'id = ? AND workoutCount > 0',
+        whereArgs: [routineId],
+        columns: ['workoutCount'],
+      );
+      if (routinesResult.isNotEmpty) {
+        numberOfWorkouts += routinesResult[0]['workoutCount'] as int;
+      }
+    }
+
+    return numberOfWorkouts;
+  }
+
+  Future<int> getWeeklyWaterIntake() async {
+    DateTime now = DateTime.now();
+    DateTime startOfWeek = DateTime(now.year, now.month, now.day - now.weekday); // Assuming Sunday is the start of the week
+    DateTime endOfWeek = startOfWeek.add(const Duration(days: 7)); // A week ahead
+
+    Database db = await initDatabase();
+    List<Map<String, dynamic>> result = await db.query(
+      tableName,
+      where: 'logDate >= ? AND logDate <= ? AND type = ?',
+      whereArgs: [
+        DateFormat('MMMM dd, yyyy').format(startOfWeek),
+        DateFormat('MMMM dd, yyyy').format(endOfWeek),
+        'water',
+      ],
+      columns: ['waterIntake'],
+    );
+
+    int totalWaterIntake = result.fold<int>(
+      0,
+          (previousValue, row) => previousValue + (int.tryParse(row['waterIntake'] ?? '') ?? 0),
+    );
+    return totalWaterIntake;
+  }
+
+  Future<int> getDailyWaterIntake() async {
+    String today = DateFormat('MMMM dd, yyyy').format(DateTime.now()); // Get today's date in 'yyyy-MM-dd' format
+
+    Database db = await initDatabase(); // Assuming you've defined initDatabase to initialize your SQLite database
+    List<Map<String, dynamic>> result = await db.query(
+      tableName,
+      where: 'logDate = ? AND type = ?',
+      whereArgs: [today, 'water'], // Assuming 'water' is the type for water intake logs
+      columns: ['waterIntake'],
+    );
+    int totalWaterIntake = result.fold<int>(
+      0,
+          (previousValue, row) =>
+      previousValue + (int.tryParse(row['waterIntake'] ?? '') ?? 0),
+    );
+    return totalWaterIntake;
   }
   Future<void> insertLocation(double latitude, double longitude, int timestamp) async {
     await _database?.insert('locations', {
@@ -202,22 +353,11 @@ class DatabaseHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 12) {
-      await db.execute('''
-        CREATE TABLE $locationsTableName (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          latitude REAL,
-          longitude REAL,
-          timestamp INTEGER
-        )
-      ''');
+    if (oldVersion < 14) {
+      // Adding the 'calories' column to the existing table
+      await db.execute('ALTER TABLE $tableName ADD calories REAL');
     }
-
-    if (oldVersion < 10) {
-      await db.execute('''
-      ALTER TABLE $tableName ADD COLUMN waterIntake TEXT;
-    ''');
-    }
+    // Add more upgrade logic for future versions if needed
   }
 
 

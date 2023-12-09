@@ -29,12 +29,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late Timer _timer;
   double userWeight=0;
   int caloriesBurned=0;
+  int weeklyCaloriesBurned=0;
   static const double caloriesBurnedPerKm = 1.5;
   int totalWorkouts = 0; // New variable to store the total workout count
-
   @override
   void initState() {
     super.initState();
+    _startTimer();
     _loadProfileData();
   }
   @override
@@ -66,10 +67,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadAdditionalData() async {
     // Load workouts and calories after profile data is loaded
     await _loadTotalWorkouts();
-    await _loadCaloriesBurned();
+    await _loadTotalCaloriesBurned();
     _startTimer(); // Start the timer after loading data
   }
-  Future<void> _loadCaloriesBurned() async {
+  Future<void> _loadTotalCaloriesBurned() async {
     QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
         .collection('locations')
         .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
@@ -101,7 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _startTimer() {
     // Execute _loadTotalCaloriesBurned() every 30 seconds
     _timer = Timer.periodic(const Duration(seconds: 30), (_) {
-      _loadCaloriesBurned();
+      _loadTotalCaloriesBurned();
     });
   }
   Future<void> _loadTotalWorkouts() async {
@@ -373,19 +374,91 @@ class GoalProgressIndicator extends StatelessWidget {
 }
 
 class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
+  static const double caloriesBurnedPerKm = 1.5;
+  int weeklyCaloriesBurned=0;
   Map<String, int> weeklyGoals = {
     'caloriesBurnedGoal': 0,
     'waterIntakeGoal': 0,
     'workoutsCompletedGoal': 0,
     'caloriesGoal': 0,
   };
-
+  double userWeight = 0;
+  bool _mounted = false;
+  int _weeklyWaterIntake=0;
+  int _weeklyWorkouts = 0;
+  int _weeklyCaloriesintake=0;
   @override
   void initState() {
     super.initState();
+    _mounted = true;
+    _loadProfileData();
+    _loadWeeklyCaloriesBurned();
     _loadWeeklyGoals();
+    _loadProgress();
   }
+  void dispose() {
+    // Dispose the timer when the widget is removed
+    _mounted=false;
+    super.dispose();
+  }
+  Future<void> _loadWeeklyCaloriesBurned() async {
+    DateTime now = DateTime.now();
+    DateTime startOfWeek = DateTime(now.year, now.month, now.day - now.weekday); // Assuming Sunday is the start of the week
+    DateTime endOfWeek = startOfWeek.add(Duration(days: 6)); // Six days ahead to get the end of the week
 
+    int startOfWeekTimestamp = startOfWeek.millisecondsSinceEpoch;
+    int endOfWeekTimestamp = endOfWeek.add(Duration(hours: 23, minutes: 59, seconds: 59, milliseconds: 999)).millisecondsSinceEpoch;
+
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
+        .collection('locations')
+        .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+        .where('timestamp', isGreaterThanOrEqualTo: startOfWeekTimestamp)
+        .where('timestamp', isLessThanOrEqualTo: endOfWeekTimestamp)
+        .orderBy('timestamp')
+        .get();
+
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> documents = querySnapshot.docs;
+
+    double totalDistance = 0;
+
+    if (documents.isNotEmpty) {
+      for (int i = 0; i < documents.length - 1; i++) {
+        GeoPoint point1 = documents[i]['position'] as GeoPoint;
+        GeoPoint point2 = documents[i + 1]['position'] as GeoPoint;
+
+        double lat1 = point1.latitude;
+        double lon1 = point1.longitude;
+        double lat2 = point2.latitude;
+        double lon2 = point2.longitude;
+
+        totalDistance += Geolocator.distanceBetween(lat1, lon1, lat2, lon2);
+      }
+    }
+    int calculatedCalories = (caloriesBurnedPerKm * (totalDistance / 1000) * userWeight!).toInt();
+    if (_mounted) {
+      setState(() {
+        weeklyCaloriesBurned = calculatedCalories;
+      });
+    }
+  }
+  Future<void> _loadProgress() async {
+    try {
+      // Get total workouts using DatabaseHelper function
+      int totalWorkouts = await DatabaseHelper().getWeeklyNumberOfWorkouts();
+      int waterIntakeValue = await DatabaseHelper().getWeeklyWaterIntake();
+      double calories = await DatabaseHelper().getWeeklyCalories();
+      int caloriesInt = calories.toInt();
+      if (_mounted) {
+        setState(() {
+          _weeklyWaterIntake = waterIntakeValue;
+          _weeklyWorkouts = totalWorkouts;
+          _weeklyCaloriesintake = caloriesInt;
+        });
+      }
+    } catch (e) {
+      print('Error fetching total workouts: $e');
+    }
+  }
   Future<void> _loadWeeklyGoals() async {
     try {
       Map<String, int> goals = await DatabaseHelper().getWeeklyGoals();
@@ -396,7 +469,22 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
       print('Error fetching weekly goals: $e');
     }
   }
-
+  Future<void> _loadProfileData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot userProfile = await FirebaseFirestore.instance
+          .collection('profiles').doc(user.uid).get();
+      if (userProfile.exists) {
+        Map<String, dynamic>? data = userProfile.data() as Map<String,
+            dynamic>?;
+        if (_mounted) {
+          setState(() {
+            userWeight = double.parse(data?['weight']);
+          });
+        }
+      }
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -416,7 +504,7 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
                 padding: const EdgeInsets.only(bottom: 10),
                 child: GoalProgressIndicator(
                   goalName: 'Calories Burned',
-                  currentValue: 0,
+                  currentValue: weeklyCaloriesBurned,
                   goalValue: weeklyGoals['caloriesBurnedGoal'] != 0
                       ? weeklyGoals['caloriesBurnedGoal']!
                       : 2500,
@@ -426,7 +514,7 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
                 padding: const EdgeInsets.only(bottom: 10),
                 child: GoalProgressIndicator(
                   goalName: 'Water Intake',
-                  currentValue: 0,
+                  currentValue: _weeklyWaterIntake,
                   goalValue: weeklyGoals['waterIntakeGoal'] != 0
                       ? weeklyGoals['waterIntakeGoal']!
                       : 28000,
@@ -436,7 +524,7 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
                 padding: const EdgeInsets.only(bottom: 10),
                 child: GoalProgressIndicator(
                   goalName: 'Workouts Completed',
-                  currentValue: 0,
+                  currentValue: _weeklyWorkouts,
                   goalValue: weeklyGoals['workoutsCompletedGoal'] != 0
                       ? weeklyGoals['workoutsCompletedGoal']!
                       : 15,
@@ -446,7 +534,7 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
                 padding: const EdgeInsets.only(bottom: 10),
                 child: GoalProgressIndicator(
                   goalName: 'Calories',
-                  currentValue: 0,
+                  currentValue: _weeklyCaloriesintake,
                   goalValue: weeklyGoals['caloriesGoal'] != 0
                       ? weeklyGoals['caloriesGoal']!
                       : 150000,

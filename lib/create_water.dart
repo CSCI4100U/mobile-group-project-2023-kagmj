@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:final_project/log_database.dart';
+import 'package:intl/intl.dart';
 
 import 'home_screen.dart';
 
@@ -26,21 +27,14 @@ class _CreateWaterScreenState extends State<CreateWaterScreen> {
       return;
     }
 
-    // Retrieve existing water intake value or set a default value
-    List<Map<String, dynamic>>? logs = await DatabaseHelper().getLogs();
-    Map<String, dynamic> existingWaterIntakeLog =
-        logs?.firstWhere((log) => log['type'] == 'water', orElse: () => {'waterIntake': '0'}) ?? {'waterIntake': '0'};
-
-    int existingWaterIntake = int.tryParse(existingWaterIntakeLog['waterIntake'].toString()) ?? 0;
-
     // Add new water intake to the existing value
-    int newWaterIntake = int.tryParse(_waterIntakeController.text) ?? 0;
-    int totalWaterIntake = existingWaterIntake + newWaterIntake;
-
+    String newWaterIntake =_waterIntakeController.text;
+    String todayFormatted = DateFormat('MMMM dd, yyyy').format(DateTime.now());
     // Prepare the data for insertion
     final waterIntake = {
       'type': 'water',
-      'waterIntake': totalWaterIntake.toString(),
+      'waterIntake': newWaterIntake,
+      'logDate': todayFormatted
     };
 
     // Insert the new water intake into the database

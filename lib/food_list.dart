@@ -48,7 +48,6 @@ class Food {
   String toString() {
     return '$name, protein: $protein, calories: $calories, per $measurement)';
   }
-
 }
 
 class foodList extends StatefulWidget {

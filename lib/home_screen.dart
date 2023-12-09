@@ -25,16 +25,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Position? _lastPosition;
-  bool _isLocationAdded = false;
-
   int _selectedIndex = 0;
   int _dailyCaloriesBurned=0;
-  final Duration _cooldownDuration = Duration(seconds: 20);
+  double _dailyCalorieIntake=0;
   List<Map<String, dynamic>> _logs = [];
   String userName = '';
   String avatarUrl = '';
-  String _waterIntakeValue = 'XX ml'; // Initialize _waterIntakeValue here
+  int _waterIntakeValue = 0; // Initialize _waterIntakeValue here
   int _totalWorkouts = 0;
   static const double caloriesBurnedPerKm = 1.5;
   double userWeight = 70.0;
@@ -61,13 +58,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
   void _startPeriodicFunctions() {
     if (mounted) {
-      caloriesTimer = Timer.periodic(const Duration(seconds: 35), (timer) {
+      caloriesTimer = Timer.periodic(const Duration(seconds: 40), (timer) {
         _loadUserWeight().then((_) {
           calculateCaloriesBurned();
         });
       });
 
-      distanceTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      distanceTimer = Timer.periodic(const Duration(seconds: 35), (timer) {
         _getPosition();
       });
     }
@@ -88,7 +85,6 @@ class _HomeScreenState extends State<HomeScreen> {
             // Store location data in Firestore
             GeoPoint geoPoint = GeoPoint(position.latitude, position.longitude);
             if (FirebaseAuth.instance.currentUser != null) {
-              print('Added');
               String? userId = FirebaseAuth.instance.currentUser?.uid;
               await FirebaseFirestore.instance.collection('locations').add({
                 'userId': userId,
@@ -97,14 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     .now()
                     .millisecondsSinceEpoch,
               });
-              _isLocationAdded = true;
             }
-            _lastPosition = position;
-
-            // Start cooldown period before allowing next addition
-            Future.delayed(_cooldownDuration, () {
-              _isLocationAdded = false;
-            });
           },
       onError: (dynamic error) {
         if (error is PermissionDeniedException) {
@@ -181,25 +170,17 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
   Future<void> _fetchLogs() async {
-    _logs = await DatabaseHelper().getLogs(); // Fetch logs from the database
-
-    // Fetch water intake specifically
-    Map<String, dynamic>? waterIntakeLog = _logs.firstWhere((log) => log['type'] == 'water', orElse: () => {'waterIntake': null});
-
-    // Extract and update the water intake value
-    String waterIntakeValue = waterIntakeLog['waterIntake'] != null ? '${waterIntakeLog['waterIntake']} ml' : 'XX ml';
-
     // Fetch workout logs
+    _logs = await DatabaseHelper().getLogs(); // Fetch logs from the database
     try {
       // Get total workouts using DatabaseHelper function
-      Map<int, int> workoutsPerLog = await DatabaseHelper().getTotalWorkoutsPerLog();
-
-      // Calculate total workouts from the map values
-      int total = workoutsPerLog.values.fold(0, (sum, count) => sum + count);
-
+      int totalWorkouts = await DatabaseHelper().getDailyNumberOfWorkouts();
+      int waterIntakeValue = await DatabaseHelper().getDailyWaterIntake();
+      double calories = await DatabaseHelper().getDailyCalories();
       setState(() {
         _waterIntakeValue=waterIntakeValue;
-        _totalWorkouts = total;
+        _totalWorkouts = totalWorkouts;
+        _dailyCalorieIntake=calories;
       });
     } catch (e) {
       print('Error fetching total workouts: $e');
@@ -269,9 +250,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: Column(
                       children: [
-                        _buildGoalDetail('Water Intake', _waterIntakeValue, Icons.local_drink),
+                        _buildGoalDetail('Water Intake', '$_waterIntakeValue', Icons.local_drink),
                         _buildSpacer(),
-                        _buildGoalDetail('Calories Intake', 'XXXX', Icons.fastfood),
+                        _buildGoalDetail('Calories Intake', '$_dailyCalorieIntake', Icons.fastfood),
                       ],
                     ),
                   ),

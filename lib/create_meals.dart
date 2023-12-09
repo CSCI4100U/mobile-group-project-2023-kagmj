@@ -14,6 +14,7 @@ class CreateMealScreen extends StatefulWidget {
 }
 
 class _CreateMealScreenState extends State<CreateMealScreen> {
+  double totalCalories=0;
   final TextEditingController _logTitleController = TextEditingController();
   final TextEditingController _logRoutineController = TextEditingController();
   final TextEditingController _logDateController = TextEditingController();
@@ -57,6 +58,7 @@ class _CreateMealScreenState extends State<CreateMealScreen> {
 
   // SubmitLog Function - Saves values from input fields and submits to local database
   void _submitLog() async {
+    double calories =  getCalories(meals);
     final log = {
       'type': 'meal',
       'logTitle': _logTitleController.text,
@@ -65,6 +67,7 @@ class _CreateMealScreenState extends State<CreateMealScreen> {
       'logDescription': _logDescriptionController.text,
       'foodItems': /*_foodItemsController.text,*/jsonEncode(meals.map((meal) => meal.toString()).toList()),
       'recipes': _recipesController.text,
+      'calories': calories
       //'meals': jsonEncode(meals.map((meal) => meal.toString()).toList()), // Convert meals to JSON string
     };
 
@@ -116,6 +119,20 @@ class _CreateMealScreenState extends State<CreateMealScreen> {
       });
     }
   }
+  double getCalories(List<dynamic> meals) {
+    double totalCals = 0.0;
+    for (int i = 0; i < meals.length; i++) {
+      if (meals[i] is Food) {
+        Food food = meals[i] as Food;
+        totalCals += food.calories ?? 0.0;
+      } else {
+        print('Invalid meal format at index $i');
+      }
+    }
+    return totalCals;
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
