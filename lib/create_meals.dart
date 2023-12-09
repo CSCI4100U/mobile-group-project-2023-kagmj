@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:final_project/log_database.dart';
 import 'home_screen.dart';
 import 'food_list.dart';
+import 'dart:convert';
 
 class CreateMealScreen extends StatefulWidget {
   const CreateMealScreen({super.key});
@@ -26,9 +27,10 @@ class _CreateMealScreenState extends State<CreateMealScreen> {
   final DateFormat _dateFormat = DateFormat('MMMM dd, yyyy');
   final DateFormat _timeFormat = DateFormat('h:mm a');
 
+  List<dynamic> meals = [];
+
   void handleMealUpdated(List<dynamic> updatedMeal) {
-    // Do something with the updated meal in CreateMealScreen
-    print(updatedMeal);
+    meals = updatedMeal;
   }
 
   @override
@@ -56,21 +58,30 @@ class _CreateMealScreenState extends State<CreateMealScreen> {
   // SubmitLog Function - Saves values from input fields and submits to local database
   void _submitLog() async {
     final log = {
-      'type' : 'meal',
+      'type': 'meal',
       'logTitle': _logTitleController.text,
       'logDate': _logDateController.text,
       'logTime': _logTimeController.text,
       'logDescription': _logDescriptionController.text,
-      'foodItems' : _foodItemsController.text,
+      'foodItems': /*_foodItemsController.text,*/jsonEncode(meals.map((meal) => meal.toString()).toList()),
       'recipes': _recipesController.text,
+      //'meals': jsonEncode(meals.map((meal) => meal.toString()).toList()), // Convert meals to JSON string
     };
 
-
-
     await DatabaseHelper().insertLog(log);
+
+    // Clear the _foodItemsController
+    _foodItemsController.clear();
+
+    // Reset the meals list
+    setState(() {
+      meals.clear();
+    });
+
     Navigator.of(context).push(
       MaterialPageRoute(
-          builder: (context) => const HomeScreen()),
+        builder: (context) => const HomeScreen(),
+      ),
     );
   }
 
@@ -170,28 +181,20 @@ class _CreateMealScreenState extends State<CreateMealScreen> {
             const SizedBox(height: 16),
             const Text("Food Items"),
             const SizedBox(height: 4),
-            /*
-            TextField(
-              controller: _foodItemsController,
-              decoration: InputDecoration(
-                labelText: 'Add list of food items',
-                floatingLabelBehavior: FloatingLabelBehavior.never,
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.black),
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-              ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => foodList(
+                      title: 'Food List',
+                      onMealUpdated: handleMealUpdated,
+                      initialMeals: meals,
+                    ),
+                  ),
+                );
+              },
+              child: Text('Food List'),
             ),
-            */
-            ElevatedButton(onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => foodList(title: 'Food List', onMealUpdated: handleMealUpdated),
-                ),
-              );
-            }, child: Text('Food List')),
             const SizedBox(height: 16),
             const Text("Date"),
             const SizedBox(height: 4),
