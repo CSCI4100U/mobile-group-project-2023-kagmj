@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:csv/csv.dart';
 import 'create_meals.dart';
+import 'dart:convert';
+
 //Food,Measure,Grams,Calories,Protein,Fat,Sat.Fat,Fiber,Carbs,Category
 class Food {
   String? name;
@@ -44,7 +46,7 @@ class Food {
   }
 
   String toString() {
-    return 'Food($name, $protein, $calories, $measurement)';
+    return '$name, protein: $protein, calories: $calories, per $measurement)';
   }
 
 }
@@ -53,28 +55,35 @@ class foodList extends StatefulWidget {
   //foodList({Key? key, this.title}):super(key: key);
   final void Function(List<dynamic>) onMealUpdated;
 
-  foodList({super.key, this.title, required this.onMealUpdated});
-
-
   String? title;
 
+  final List<dynamic> initialMeals;
+
+  foodList({super.key, this.title, required this.onMealUpdated, required this.initialMeals});
+
   @override
-  State<foodList> createState() => _foodListState();
+  State<foodList> createState() => _foodListState(initialMeals: initialMeals);
 
 }
 
 class _foodListState extends State<foodList> {
 
 
+  _foodListState({required this.initialMeals});
+
+  final List<dynamic> initialMeals;
+  List<dynamic> meal = [];
+
   @override
   void initState() {
     super.initState();
+    meal = List.from(initialMeals);
     loadFoods();
   }
 
   List<dynamic> _foods = [];
   List<dynamic> _filteredFoods = [];
-  List<dynamic> meal = [];
+  //List<dynamic> meal = [];
 
   List<dynamic> getMeal(){
     return meal;

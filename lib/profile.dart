@@ -195,7 +195,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 MyMealsCard(), // MyMealsCard
               ],
             ),
-            WeeklyGoalProgress(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                WeeklyGoalProgress(),
+              ]
+            )
+
           ],
         ),
     ),
@@ -329,26 +335,25 @@ class GoalProgressIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ensuring goalValue is not zero or null
     int adjustedGoalValue = goalValue != 0 ? goalValue : 1;
-
     double progress = currentValue / adjustedGoalValue;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           goalName,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
-        SizedBox(
-          height: 20,
+        Container(
+          height: 24, // Set a fixed height for the CircularProgressIndicator
           child: CircularProgressIndicator(
             value: progress,
             backgroundColor: Colors.grey[300],
             valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
           ),
         ),
+        const SizedBox(height: 4), // Adjusted spacing
         Text(
           'Current: $currentValue',
           style: const TextStyle(fontSize: 14),
@@ -362,7 +367,7 @@ class GoalProgressIndicator extends StatelessWidget {
   }
 }
 
-class WeeklyGoalProgress extends StatefulWidget {
+  class WeeklyGoalProgress extends StatefulWidget {
   @override
   _WeeklyGoalProgressState createState() => _WeeklyGoalProgressState();
 }
@@ -394,15 +399,13 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.centerLeft,
-      child: Card(
-        elevation: 4,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-    child: SingleChildScrollView(
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 82), //this is the padding above and sides of WeeklyGoalProgress
+        child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               const Text(
                 'Weekly Goals Progress',
@@ -410,53 +413,49 @@ class _WeeklyGoalProgressState extends State<WeeklyGoalProgress> {
               ),
               const SizedBox(height: 10),
               Padding(
-                padding: const EdgeInsets.only(bottom: 10), // Add bottom padding for space
+                padding: const EdgeInsets.only(bottom: 10),
                 child: GoalProgressIndicator(
                   goalName: 'Calories Burned',
                   currentValue: 0,
                   goalValue: weeklyGoals['caloriesBurnedGoal'] != 0
                       ? weeklyGoals['caloriesBurnedGoal']!
-                      : 2500, // Ensuring goal value isn't zero
+                      : 2500,
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(bottom: 10), // Add bottom padding for space
+                padding: const EdgeInsets.only(bottom: 10),
                 child: GoalProgressIndicator(
                   goalName: 'Water Intake',
                   currentValue: 0,
                   goalValue: weeklyGoals['waterIntakeGoal'] != 0
                       ? weeklyGoals['waterIntakeGoal']!
-                      : 28000, // Ensuring goal value isn't zero
+                      : 28000,
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(bottom: 10), // Add bottom padding for space
+                padding: const EdgeInsets.only(bottom: 10),
                 child: GoalProgressIndicator(
                   goalName: 'Workouts Completed',
                   currentValue: 0,
                   goalValue: weeklyGoals['workoutsCompletedGoal'] != 0
                       ? weeklyGoals['workoutsCompletedGoal']!
-                      : 15, // Ensuring goal value isn't zero
+                      : 15,
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(bottom: 10), // Add bottom padding for space
+                padding: const EdgeInsets.only(bottom: 10),
                 child: GoalProgressIndicator(
                   goalName: 'Calories',
                   currentValue: 0,
                   goalValue: weeklyGoals['caloriesGoal'] != 0
                       ? weeklyGoals['caloriesGoal']!
-                      : 150000, // Ensuring goal value isn't zero
+                      : 150000,
                 ),
               ),
             ],
           ),
-    ),
         ),
       ),
     );
   }
 }
-
-
-
