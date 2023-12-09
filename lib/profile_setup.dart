@@ -71,7 +71,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0FA7E0),
       appBar: AppBar(
-          title: const Text('Complete Your Profile'),
+        title: const Text('Complete Your Profile'),
         centerTitle: true,
       ),
       body: Center(
@@ -105,7 +105,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField(
                     decoration: InputDecoration(
-                        labelText: 'Country',
+                      labelText: 'Country',
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       filled: true,
                       fillColor: Colors.white,
@@ -167,7 +167,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField(
                     decoration: InputDecoration(
-                        labelText: 'Gender',
+                      labelText: 'Gender',
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       filled: true,
                       fillColor: Colors.white,
