@@ -26,14 +26,16 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   Position? _lastPosition;
+  bool _isLocationAdded = false;
+
   int _selectedIndex = 0;
   int _dailyCaloriesBurned=0;
+  final Duration _cooldownDuration = Duration(seconds: 20);
   List<Map<String, dynamic>> _logs = [];
   String userName = '';
   String avatarUrl = '';
   String _waterIntakeValue = 'XX ml'; // Initialize _waterIntakeValue here
   int _totalWorkouts = 0;
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
   static const double caloriesBurnedPerKm = 1.5;
   double userWeight = 70.0;
   bool isLoggedIn=false;
@@ -47,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _fetchLogs();
     _loadProfileData();
     _loadUserWeight();
-    _calculateTotalDistance();
+    _getPosition();
     _startPeriodicFunctions();
   }
   @override
@@ -59,18 +61,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
   void _startPeriodicFunctions() {
     if (mounted) {
-      caloriesTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      caloriesTimer = Timer.periodic(const Duration(seconds: 35), (timer) {
         _loadUserWeight().then((_) {
           calculateCaloriesBurned();
         });
       });
 
-      distanceTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
-        _calculateTotalDistance();
+      distanceTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+        _getPosition();
       });
     }
   }
-  Future<void> _calculateTotalDistance() async {
+
+  Future<void> _getPosition() async {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -80,19 +83,29 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
     }
-
     _positionStreamSubscription = Geolocator.getPositionStream().listen(
           (Position position) async {
-        if (_lastPosition != null) {
-          // Store location data in SQLite
-          await DatabaseHelper().insertLocation(
-            position.latitude,
-            position.longitude,
-            DateTime.now().millisecondsSinceEpoch,
-          );
-        }
-        _lastPosition = position;
-      },
+            // Store location data in Firestore
+            GeoPoint geoPoint = GeoPoint(position.latitude, position.longitude);
+            if (FirebaseAuth.instance.currentUser != null) {
+              print('Added');
+              String? userId = FirebaseAuth.instance.currentUser?.uid;
+              await FirebaseFirestore.instance.collection('locations').add({
+                'userId': userId,
+                'position': geoPoint,
+                'timestamp': DateTime
+                    .now()
+                    .millisecondsSinceEpoch,
+              });
+              _isLocationAdded = true;
+            }
+            _lastPosition = position;
+
+            // Start cooldown period before allowing next addition
+            Future.delayed(_cooldownDuration, () {
+              _isLocationAdded = false;
+            });
+          },
       onError: (dynamic error) {
         if (error is PermissionDeniedException) {
           // Handle permission denied error here
@@ -101,18 +114,59 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void calculateCaloriesBurned() {
+  Future<double> getDailyDistance(String userId) async {
+    DateTime now = DateTime.now();
+    int todayStart = DateTime(now.year, now.month, now.day).millisecondsSinceEpoch;
+    int todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59, 999).millisecondsSinceEpoch;
+
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
+        .collection('locations')
+        .where('userId', isEqualTo: userId)
+        .where('timestamp', isGreaterThanOrEqualTo: todayStart)
+        .where('timestamp', isLessThanOrEqualTo: todayEnd)
+        .orderBy('timestamp')
+        .get();
+
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> documents = querySnapshot.docs;
+
+    double totalDistance = 0;
+
+    if (documents.isNotEmpty) {
+      for (int i = 0; i < documents.length - 1; i++) {
+        GeoPoint point1 = documents[i]['position'] as GeoPoint;
+        GeoPoint point2 = documents[i + 1]['position'] as GeoPoint;
+
+        double lat1 = point1.latitude;
+        double lon1 = point1.longitude;
+        double lat2 = point2.latitude;
+        double lon2 = point2.longitude;
+
+        totalDistance += Geolocator.distanceBetween(lat1, lon1, lat2, lon2);
+      }
+    }
+
+
+    return totalDistance;
+  }
+
+  void calculateCaloriesBurned() async {
     // Ensure user weight is available before calculations
     if (userWeight != null) {
-      Future<double> doubleFuture= DatabaseHelper().getDailyDistance();
-      doubleFuture.then((double value) {
-        int calculatedCalories = (caloriesBurnedPerKm * (value / 1000) * userWeight!).toInt();
-        setState(() {
-          _dailyCaloriesBurned=calculatedCalories;
-        });
-      });
+      if (FirebaseAuth.instance.currentUser != null) {
+        String? userId = FirebaseAuth.instance.currentUser?.uid;
+        try {
+          double distance = await getDailyDistance(userId!) as double;
+          int calculatedCalories = (caloriesBurnedPerKm * (distance / 1000) * userWeight!).toInt();
+          setState(() {
+            _dailyCaloriesBurned = calculatedCalories;
+          });
+        } catch (e) {
+          print('Error calculating daily distance: $e');
+        }
+      }
     }
   }
+
   Future<void> _loadUserWeight() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {

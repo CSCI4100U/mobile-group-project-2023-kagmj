@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:final_project/profile_my_meal.dart';
 import 'package:final_project/view_routine.dart';
+import 'package:geolocator/geolocator.dart';
 
 import 'log_database.dart';
 import 'settings_screen.dart';
@@ -61,16 +62,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     _loadAdditionalData();
   }
+
   Future<void> _loadAdditionalData() async {
     // Load workouts and calories after profile data is loaded
     await _loadTotalWorkouts();
-    await _loadTotalCaloriesBurned();
+    await _loadCaloriesBurned();
     _startTimer(); // Start the timer after loading data
+  }
+  Future<void> _loadCaloriesBurned() async {
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
+        .collection('locations')
+        .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+        .orderBy('timestamp')
+        .get();
+
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> documents = querySnapshot.docs;
+
+    double totalDistance = 0;
+
+    if (documents.isNotEmpty) {
+      for (int i = 0; i < documents.length - 1; i++) {
+        GeoPoint point1 = documents[i]['position'] as GeoPoint;
+        GeoPoint point2 = documents[i + 1]['position'] as GeoPoint;
+
+        double lat1 = point1.latitude;
+        double lon1 = point1.longitude;
+        double lat2 = point2.latitude;
+        double lon2 = point2.longitude;
+
+        totalDistance += Geolocator.distanceBetween(lat1, lon1, lat2, lon2);
+      }
+    }
+    int calculatedCalories = (caloriesBurnedPerKm * (totalDistance / 1000) * userWeight!).toInt();
+    setState(() {
+      caloriesBurned=calculatedCalories;
+    });
   }
   void _startTimer() {
     // Execute _loadTotalCaloriesBurned() every 30 seconds
     _timer = Timer.periodic(const Duration(seconds: 30), (_) {
-      _loadTotalCaloriesBurned();
+      _loadCaloriesBurned();
     });
   }
   Future<void> _loadTotalWorkouts() async {
@@ -90,23 +121,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       print('Error fetching total workouts: $e');
     }
   }
-  Future<void> _loadTotalCaloriesBurned() async {
-    try {
-      // Get total workouts using DatabaseHelper function
-      double distance = await DatabaseHelper().getTotalDistance();
-
-      // Calculate total calories burned from the map values
-      int calculatedCalories = (caloriesBurnedPerKm * (distance / 1000) * userWeight!).toInt();
-      print(calculatedCalories);
-      setState(() {
-        caloriesBurned=calculatedCalories;
-      });
-    } catch (e) {
-      print('Error fetching total workouts: $e');
-    }
-  }
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
